@@ -6,6 +6,7 @@ import { ActionBar } from '../src/components/ActionBar';
 import { SettingsPanel } from '../src/components/SettingsPanel';
 import { App } from '../src/App';
 import { getExportFilename, MAX_NUSUK_BYTES } from '../src/utils/exportBridge';
+import * as exportBridge from '../src/utils/exportBridge';
 import { PRESETS } from '../src/utils/dimensions';
 import { setLocale, getLocale } from '../src/utils/i18n';
 import { setTheme, getStoredTheme } from '../src/utils/theme';
@@ -535,5 +536,120 @@ describe('App component', () => {
     ovalBtn?.click();
     await new Promise((r) => setTimeout(r, 20));
     expect(ovalBtn?.classList.contains('active')).toBe(false);
+  });
+
+  it('releases GPU textures via bitmap.close() on reset and image replacement', async () => {
+    const closeSpy1 = vi.fn();
+    const closeSpy2 = vi.fn();
+
+    (globalThis as any).createImageBitmap = vi
+      .fn()
+      .mockResolvedValueOnce({ width: 800, height: 600, close: closeSpy1 })
+      .mockResolvedValueOnce({ width: 1000, height: 800, close: closeSpy2 });
+
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file1 = createValidJpegFile('photo1.jpg');
+    Object.defineProperty(input, 'files', { value: [file1], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(closeSpy1).not.toHaveBeenCalled();
+
+    // Replace with second image
+    const file2 = createValidJpegFile('photo2.jpg');
+    Object.defineProperty(input, 'files', { value: [file2], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // First bitmap should have been closed
+    expect(closeSpy1).toHaveBeenCalled();
+
+    // Reset application
+    const resetBtn = container.querySelector<HTMLButtonElement>('.btn-danger');
+    resetBtn?.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Second bitmap should have been closed
+    expect(closeSpy2).toHaveBeenCalled();
+  });
+
+  it('defers URL revocation in handleDownload by 2000ms', async () => {
+    const originalCreateUrl = URL.createObjectURL;
+    const originalRevokeUrl = URL.revokeObjectURL;
+    const revokeSpy = vi.fn();
+    const createUrlSpy = vi.fn().mockReturnValue('blob:http://localhost/test-uuid');
+    URL.createObjectURL = createUrlSpy;
+    URL.revokeObjectURL = revokeSpy;
+
+    const encodeSpy = vi.spyOn(exportBridge, 'renderAndEncode').mockResolvedValue({
+      blob: new Blob(['mock-bytes'], { type: 'image/jpeg' }),
+      width: 640,
+      height: 480,
+      bytes: 500_000
+    });
+
+    try {
+      vi.useFakeTimers();
+
+      render(h(App, {}), container);
+
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      const file = createValidJpegFile();
+      Object.defineProperty(input, 'files', { value: [file], writable: true });
+      input?.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Advance for file validation and bitmap creation
+      await vi.advanceTimersByTimeAsync(80);
+
+      // Advance for debounced encoding worker (300ms)
+      await vi.advanceTimersByTimeAsync(350);
+
+      const downloadBtn = container.querySelector<HTMLButtonElement>('.download-btn');
+      expect(downloadBtn).not.toBeNull();
+      expect(downloadBtn?.disabled).toBe(false);
+
+      downloadBtn?.click();
+      expect(createUrlSpy).toHaveBeenCalled();
+      expect(revokeSpy).not.toHaveBeenCalled();
+
+      // Fast-forward 1999ms: still not revoked
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(revokeSpy).not.toHaveBeenCalled();
+
+      // Fast-forward past 2000ms: now revoked
+      await vi.advanceTimersByTimeAsync(50);
+      expect(revokeSpy).toHaveBeenCalledWith('blob:http://localhost/test-uuid');
+    } finally {
+      vi.useRealTimers();
+      URL.createObjectURL = originalCreateUrl;
+      URL.revokeObjectURL = originalRevokeUrl;
+      encodeSpy.mockRestore();
+    }
+  });
+
+  it('notifies user if worker encoding fails unexpectedly', async () => {
+    const encodeSpy = vi
+      .spyOn(exportBridge, 'renderAndEncode')
+      .mockRejectedValue(new Error('GPU encoding error'));
+
+    try {
+      render(h(App, {}), container);
+
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      const file = createValidJpegFile();
+      Object.defineProperty(input, 'files', { value: [file], writable: true });
+      input?.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 80));
+
+      // Wait for debounced encoding (300ms + margin)
+      await new Promise((r) => setTimeout(r, 350));
+
+      const toastError = container.querySelector('.toast-error');
+      expect(toastError).not.toBeNull();
+    } finally {
+      encodeSpy.mockRestore();
+    }
   });
 });

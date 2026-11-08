@@ -69,8 +69,14 @@ export function App() {
 
     createImageBitmap(imageFile, { imageOrientation: 'from-image' })
       .then((bmp) => {
-        setOriginalBitmap(bmp);
-        setProcessedBitmap(null);
+        setOriginalBitmap((prev) => {
+          prev?.close?.();
+          return bmp;
+        });
+        setProcessedBitmap((prev) => {
+          prev?.close?.();
+          return null;
+        });
         setBgRemovalActive(false);
         setTransform(fillTransform(cropW, cropH, bmp.width, bmp.height));
       })
@@ -81,7 +87,10 @@ export function App() {
   const handleToggleBgRemoval = async (active: boolean) => {
     if (!active) {
       setBgRemovalActive(false);
-      setProcessedBitmap(null);
+      setProcessedBitmap((prev) => {
+        prev?.close?.();
+        return null;
+      });
       return;
     }
 
@@ -94,7 +103,10 @@ export function App() {
         await remover.init();
       }
       const result = await remover.removeBackground(originalBitmap, featherRadius);
-      setProcessedBitmap(result);
+      setProcessedBitmap((prev) => {
+        prev?.close?.();
+        return result;
+      });
       setBgRemovalActive(true);
     } catch {
       setErrorMsg('Erreur lors du détourage de la photo.');
@@ -113,7 +125,10 @@ export function App() {
       try {
         const remover = getBackgroundRemover();
         const result = await remover.removeBackground(originalBitmap, radius);
-        setProcessedBitmap(result);
+        setProcessedBitmap((prev) => {
+          prev?.close?.();
+          return result;
+        });
       } catch {
         setErrorMsg('Erreur lors du lissage des contours.');
       }
@@ -140,7 +155,7 @@ export function App() {
         setAdjustedQuality(res.adjustedQuality);
       } catch (e: any) {
         if (e?.name !== 'AbortError') {
-          // Worker encoding error
+          setErrorMsg(t('dropzone.error_format'));
         }
       }
     }, 300);
@@ -161,13 +176,21 @@ export function App() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 2000);
   };
 
   const handleReset = () => {
     setImageFile(null);
-    setOriginalBitmap(null);
-    setProcessedBitmap(null);
+    setOriginalBitmap((prev) => {
+      prev?.close?.();
+      return null;
+    });
+    setProcessedBitmap((prev) => {
+      prev?.close?.();
+      return null;
+    });
     setBgRemovalActive(false);
     setEncodedBlob(null);
     setEncodedBytes(0);
