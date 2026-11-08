@@ -18,7 +18,7 @@
   "controls.oval_guide": "Guide visage ovale",
   "controls.empty_warning": "Les zones vides seront remplies en blanc pur",
   "size.title": "Taille de sortie",
-  "size.preset_nusuk": "640×480 (Nusuk)",
+  "size.preset_nusuk": "480×640 (Nusuk)",
   "size.preset_passport": "35×45 mm",
   "size.preset_intl": "51×51 mm (2×2 in)",
   "size.width": "Largeur",

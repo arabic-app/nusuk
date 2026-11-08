@@ -35,8 +35,8 @@ import { WorkerBackgroundRemover, getBackgroundRemover } from '../src/services/B
 describe('End-to-end integration constraints', () => {
   describe('Nusuk portal specifications', () => {
     it('strictly adheres to Nusuk requirements', () => {
-      expect(PRESETS.nusuk.width).toBe(640);
-      expect(PRESETS.nusuk.height).toBe(480);
+      expect(PRESETS.nusuk.width).toBe(480);
+      expect(PRESETS.nusuk.height).toBe(640);
       expect(PRESETS.nusuk.unit).toBe('px');
       expect(PRESETS.nusuk.lockRatio).toBe(true);
       expect(MAX_NUSUK_BYTES).toBe(1_000_000);
@@ -45,14 +45,14 @@ describe('End-to-end integration constraints', () => {
     it('validates standard Nusuk dimension calculations', () => {
       const pxWidth = convertToPixels(PRESETS.nusuk.width, PRESETS.nusuk.unit, PRESETS.nusuk.dpi);
       const pxHeight = convertToPixels(PRESETS.nusuk.height, PRESETS.nusuk.unit, PRESETS.nusuk.dpi);
-      expect(pxWidth).toBe(640);
-      expect(pxHeight).toBe(480);
-      expect(clampDimension(pxWidth)).toBe(640);
+      expect(pxWidth).toBe(480);
+      expect(pxHeight).toBe(640);
+      expect(clampDimension(pxWidth)).toBe(480);
     });
 
     it('formats export filename according to Nusuk naming convention', () => {
-      expect(getExportFilename(640, 480, 'image/jpeg')).toBe('photo-nusuk-640x480.jpg');
-      expect(getExportFilename(640, 480, 'image/png')).toBe('photo-nusuk-640x480.png');
+      expect(getExportFilename(480, 640, 'image/jpeg')).toBe('photo-nusuk-480x640.jpg');
+      expect(getExportFilename(480, 640, 'image/png')).toBe('photo-nusuk-480x640.png');
     });
 
     it('validates image files rejecting oversized uploads (> 30MB) and non-images', async () => {

@@ -53,10 +53,10 @@ describe('Dimensions engine', () => {
     expect(clampDimension(640.6)).toBe(641);
   });
 
-  it('contains Nusuk preset 640x480 px', () => {
+  it('contains Nusuk preset 480x640 px', () => {
     expect(PRESETS.nusuk).toBeDefined();
-    expect(PRESETS.nusuk.width).toBe(640);
-    expect(PRESETS.nusuk.height).toBe(480);
+    expect(PRESETS.nusuk.width).toBe(480);
+    expect(PRESETS.nusuk.height).toBe(640);
     expect(PRESETS.nusuk.unit).toBe('px');
     expect(PRESETS.nusuk.dpi).toBe(300);
     expect(PRESETS.nusuk.lockRatio).toBe(true);

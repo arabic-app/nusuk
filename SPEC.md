@@ -7,7 +7,7 @@
 
 ### 1.1 Contexte & Problématique
 Le portail officiel du Hajj et de la Omra (**hajj.nusuk.sa**) impose des spécifications photographiques très strictes pour la validation des visas et des cartes d'identité de pèlerin (Nusuk Card) :
-- Dimensions requises : **640 × 480 px** par défaut (format portrait/paysage normalisé selon le formulaire officiel).
+- Dimensions requises : **480 × 640 px** par défaut (format portrait normalisé pour photo d'identité).
 - Fond obligatoire : **Blanc pur (#FFFFFF)**, uniforme, sans ombres ni dégradés.
 - Poids strict du fichier : **Inférieur ou égal à 1 Mo (1 000 000 octets)** sous peine de rejet immédiat lors de la soumission du formulaire.
 - Cadrage biométrique : Visage droit, centré, proportions respectées, regard vers l'objectif.
@@ -134,7 +134,7 @@ Pour respecter le quota des déploiements Vercel Hobby :
 +---------------------------------------------------+--------------------------------+
 |                                                   |  CARTE 1 : TAILLE DE SORTIE   |
 |                                                   |  Préréglages : [Nusuk] [35x45] |
-|              ZONE DE CADRAGE                      |  L: [ 640 ] px   H: [ 480 ] px |
+|              ZONE DE CADRAGE                      |  L: [ 480 ] px   H: [ 640 ] px |
 |                                                   |  [x] Verrouiller le ratio      |
 |         +-----------------------+                 +--------------------------------+
 |         |       CADRE FIXE      |                 |  CARTE 2 : FOND & DÉTOURAGE    |
@@ -146,7 +146,7 @@ Pour respecter le quota des déploiements Vercel Hobby :
 |  [ - ] [ Zoom: 125% ] [ + ] [ Centrer ] [ 90° ]   |  (o) JPG [Recommandé]   ( ) PNG|
 |                                                   |  Qualité auto : 0.92           |
 +---------------------------------------------------+--------------------------------+
-|  BARRE BASSE :  640 x 480 px  |  JAUGE : [======    ] 412 Ko / 1 Mo  |  [ TÉLÉCHARGER ] |
+|  BARRE BASSE :  480 x 640 px  |  JAUGE : [======    ] 412 Ko / 1 Mo  |  [ TÉLÉCHARGER ] |
 +------------------------------------------------------------------------------------+
 ```
 
@@ -184,7 +184,7 @@ Pour respecter le quota des déploiements Vercel Hobby :
 #### C. Modèle Mathématique Normalisé
 L'état de transformation est stocké sous forme de coordonnées relatives normalisées indépendantes de la résolution d'affichage :
 $$\text{Transformation} = \{ \text{scale}: \mathbb{R}^+, \text{tx}: \mathbb{R}, \text{ty}: \mathbb{R}, \text{rotation}: \{0, 90, 180, 270\}, \text{flipX}: \text{boolean} \}$$
-*Avantage* : Si l'utilisateur modifie la résolution de sortie (ex: passe de 640×480 à 35×45 mm), sa composition et son cadrage visuel sont scrupuleusement conservés sans déformation.
+*Avantage* : Si l'utilisateur modifie la résolution de sortie (ex: passe de 480×640 à 35×45 mm), sa composition et son cadrage visuel sont scrupuleusement conservés sans déformation.
 
 #### D. Détection des Zones Non Couvertes
 Si l'image transformée ne couvre pas la totalité du rectangle de sortie, un bandeau informatif discret apparaît :
@@ -195,7 +195,7 @@ Si l'image transformée ne couvre pas la totalité du rectangle de sortie, un ba
 ### 4.3 Taille de Sortie & Unités
 
 #### A. Préréglages en 1 Clic
-1. **Nusuk Hajj / Omra (Par défaut)** : `640 × 480 px`
+1. **Nusuk Hajj / Omra (Par défaut)** : `480 × 640 px`
 2. **Format Standard Passeport / Visa** : `35 × 45 mm` (à 300 DPI $\rightarrow 413 \times 531 \text{ px}$)
 3. **Format International 2×2 pouces** : `51 × 51 mm` (à 300 DPI $\rightarrow 602 \times 602 \text{ px}$)
 
@@ -207,7 +207,7 @@ Si l'image transformée ne couvre pas la totalité du rectangle de sortie, un ba
   $$\text{px} = \text{round}\left( \text{valeur}_{\text{in}} \times \text{DPI} \right)$$
   $$\text{valeur}_{\text{in}} = \frac{\text{valeur}_{\text{mm}}}{25.4} = \frac{\text{valeur}_{\text{cm}}}{2.54}$$
 - Bouton de verrouillage du ratio d'aspect (cadenas).
-- Affichage permanent du résultat converti en pixels sous les champs : `→ 640 × 480 px`.
+- Affichage permanent du résultat converti en pixels sous les champs : `→ 480 × 640 px`.
 - Bornes de sécurité : Largeur et hauteur bornées entre **50 px** et **4000 px**.
 
 ---
@@ -275,7 +275,7 @@ Présente simultanément dans la carte « Export » et dans la barre d'action ba
 7. **Nommage standardisé du fichier généré** :
    ```
    photo-nusuk-{Largeur}x{Hauteur}.{extension}
-   Exemple : photo-nusuk-640x480.jpg
+   Exemple : photo-nusuk-480x640.jpg
    ```
 
 ---
@@ -402,7 +402,7 @@ L'interface adopte une esthétique sobre, haut de gamme et institutionnelle, ins
 Pour valider la mise en production, l'application doit satisfaire l'intégralité des tests suivants :
 
 ### 9.1 Dimensions & Rendu Graphique
-- [ ] Le fichier téléchargé présente **exactement** les dimensions en pixels spécifiées (au pixel près, vérifié sur `640 × 480 px`).
+- [ ] Le fichier téléchargé présente **exactement** les dimensions en pixels spécifiées (au pixel près, vérifié sur `480 × 640 px`).
 - [ ] Les bordures et marges non couvertes par la photo sont remplies en **blanc pur `#FFFFFF` exact** (RGB: 255, 255, 255).
 - [ ] L'orientation EXIF de l'appareil photo est automatiquement corrigée sans inversion tête-bêche.
 - [ ] La composition visuelle cadrée à l'écran correspond au pixel près au fichier exporté.
@@ -449,7 +449,7 @@ flowchart TD
    - Composant Dropzone (glisser-déposer, clic, capture mobile, `paste` clipboard).
    - Moteur Canvas de manipulation (zoom, translation, rotation, miroir, guide ovale).
 3. **Phase 3 — Gestion des Dimensions & Unités**
-   - Sélecteur de préréglages (Nusuk 640×480, 35×45 mm, etc.).
+   - Sélecteur de préréglages (Nusuk 480×640, 35×45 mm, etc.).
    - Moteur mathématique de conversion px / mm / cm / in avec gestion du DPI.
 4. **Phase 4 — Pipeline d'Exportation & Contrôle du Poids dans un Web Worker**
    - Worker d'encodage asynchrone sur `OffscreenCanvas`.

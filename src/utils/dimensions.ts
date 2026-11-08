@@ -23,8 +23,8 @@ export function clampDimension(px: number): number {
 
 export const PRESETS: Record<string, OutputDimension> = {
   nusuk: {
-    width: 640,
-    height: 480,
+    width: 480,
+    height: 640,
     unit: 'px',
     dpi: 300,
     lockRatio: true

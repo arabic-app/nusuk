@@ -18,7 +18,7 @@
   "controls.oval_guide": "Oval face guide",
   "controls.empty_warning": "Empty areas will be filled with pure white",
   "size.title": "Output dimensions",
-  "size.preset_nusuk": "640×480 (Nusuk)",
+  "size.preset_nusuk": "480×640 (Nusuk)",
   "size.preset_passport": "35×45 mm",
   "size.preset_intl": "51×51 mm (2×2 in)",
   "size.width": "Width",

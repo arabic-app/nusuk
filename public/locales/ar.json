@@ -18,7 +18,7 @@
   "controls.oval_guide": "دليل الوجه البيضاوي",
   "controls.empty_warning": "المساحات الفارغة ستُملأ باللون الأبيض الناصع",
   "size.title": "أبعاد الإخراج",
-  "size.preset_nusuk": "640×480 (نسك)",
+  "size.preset_nusuk": "480×640 (نسك)",
   "size.preset_passport": "35×45 مم",
   "size.preset_intl": "51×51 مم (2×2 بوصة)",
   "size.width": "العرض",
