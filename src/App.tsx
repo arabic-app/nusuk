@@ -27,6 +27,7 @@ import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransfo
 import { detectFace, computeFaceFraming } from './utils/faceDetection';
 import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
+import { isPhotoSheetEnabled } from './utils/features';
 import { t, subscribeLocale, initLocale } from './utils/i18n';
 import { initTheme } from './utils/theme';
 import './styles/theme.css';
@@ -65,6 +66,7 @@ export function App() {
 
   const [sheetConfig, setSheetConfig] = useState<SheetConfig>(createDefaultSheetConfig());
   const [showSheetPreview, setShowSheetPreview] = useState(false);
+  const showPhotoSheet = isPhotoSheetEnabled();
 
   const [encodedBytes, setEncodedBytes] = useState<number>(0);
   const [encodedBlob, setEncodedBlob] = useState<Blob | null>(null);
@@ -230,7 +232,7 @@ export function App() {
           cropH,
           transform,
           exportConfig,
-          sheetConfig,
+          showPhotoSheet ? sheetConfig : undefined,
           controller.signal
         );
         setEncodedBytes(res.bytes);
@@ -247,12 +249,17 @@ export function App() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [activeBitmap, cropW, cropH, transform, exportConfig, sheetConfig]);
+  }, [activeBitmap, cropW, cropH, transform, exportConfig, sheetConfig, showPhotoSheet]);
 
   const handleDownload = () => {
     if (!encodedBlob) return;
     try {
-      const filename = getExportFilename(cropW, cropH, exportConfig.format, sheetConfig);
+      const filename = getExportFilename(
+        cropW,
+        cropH,
+        exportConfig.format,
+        showPhotoSheet ? sheetConfig : undefined
+      );
       const url = URL.createObjectURL(encodedBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -497,12 +504,17 @@ export function App() {
               onFeatherChange={handleFeatherChange}
               onCompareStart={() => setIsComparing(true)}
               onCompareEnd={() => setIsComparing(false)}
-              sheetConfig={sheetConfig}
-              onSheetConfigChange={(cfg) => {
-                setEncodedBlob(null);
-                setSheetConfig(cfg);
-              }}
-              onOpenSheetPreview={() => setShowSheetPreview(true)}
+              sheetConfig={showPhotoSheet ? sheetConfig : undefined}
+              onSheetConfigChange={
+                showPhotoSheet
+                  ? (cfg) => {
+                      setEncodedBlob(null);
+                      setSheetConfig(cfg);
+                    }
+                  : undefined
+              }
+              onOpenSheetPreview={showPhotoSheet ? () => setShowSheetPreview(true) : undefined}
+              showPhotoSheet={showPhotoSheet}
             />
           </div>
         )}
@@ -515,20 +527,22 @@ export function App() {
           bytes={encodedBytes}
           onDownload={handleDownload}
           disabled={!encodedBlob}
-          sheetConfig={sheetConfig}
-          totalPhotos={calculateSheetLayout(cropW, cropH, sheetConfig).totalPhotos}
+          sheetConfig={showPhotoSheet ? sheetConfig : undefined}
+          totalPhotos={showPhotoSheet ? calculateSheetLayout(cropW, cropH, sheetConfig).totalPhotos : 0}
         />
       )}
 
-      <SheetPreviewModal
-        isOpen={showSheetPreview}
-        onClose={() => setShowSheetPreview(false)}
-        bitmap={activeBitmap}
-        transform={transform}
-        dimension={dimension}
-        sheetConfig={sheetConfig}
-        onDownload={handleDownload}
-      />
+      {showPhotoSheet && (
+        <SheetPreviewModal
+          isOpen={showSheetPreview}
+          onClose={() => setShowSheetPreview(false)}
+          bitmap={activeBitmap}
+          transform={transform}
+          dimension={dimension}
+          sheetConfig={sheetConfig}
+          onDownload={handleDownload}
+        />
+      )}
     </div>
   );
 }

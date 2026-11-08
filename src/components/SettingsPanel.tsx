@@ -3,6 +3,7 @@ import { OutputDimension, ExportConfig, Unit, SheetConfig } from '../types';
 import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { calculateSheetLayout } from '../utils/sheetTiling';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
+import { isPhotoSheetEnabled } from '../utils/features';
 import { t } from '../utils/i18n';
 import {
   IconRuler,
@@ -33,6 +34,7 @@ export interface SettingsPanelProps {
   sheetConfig?: SheetConfig;
   onSheetConfigChange?: (cfg: SheetConfig) => void;
   onOpenSheetPreview?: () => void;
+  showPhotoSheet?: boolean;
 }
 
 export function SettingsPanel({
@@ -51,7 +53,8 @@ export function SettingsPanel({
   onCompareEnd,
   sheetConfig,
   onSheetConfigChange,
-  onOpenSheetPreview
+  onOpenSheetPreview,
+  showPhotoSheet = isPhotoSheetEnabled()
 }: SettingsPanelProps) {
   const isNusukPreset =
     dimension.width === PRESETS.nusuk.width &&
@@ -284,7 +287,7 @@ export function SettingsPanel({
       </div>
 
       {/* Photo Sheet (Palette) Card */}
-      {sheetConfig && onSheetConfigChange && (
+      {showPhotoSheet && sheetConfig && onSheetConfigChange && (
         <div class="settings-card palette-card">
           <h3 class="card-title">
             <IconGrid size={18} class="card-title-icon" />
