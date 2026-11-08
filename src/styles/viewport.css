@@ -84,6 +84,8 @@
 .empty-warning-badge {
   position: absolute;
   bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: rgba(20, 33, 26, 0.85);
   color: #FFFFFF;
   padding: 6px 14px;
@@ -91,4 +93,5 @@
   font-size: 13px;
   backdrop-filter: blur(8px);
   pointer-events: none;
+  white-space: nowrap;
 }

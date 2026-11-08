@@ -3,7 +3,7 @@ import { h, render } from 'preact';
 import { CropViewport } from '../src/components/CropViewport';
 import { TransformState } from '../src/types';
 import { createDefaultTransform } from '../src/utils/transform';
-import { t } from '../src/utils/i18n';
+import { t, setLocale } from '../src/utils/i18n';
 
 describe('Viewport and Interactive Canvas', () => {
   describe('Viewport bounding and aspect ratio', () => {
@@ -82,7 +82,7 @@ describe('Viewport and Interactive Canvas', () => {
       const viewportEl = container.querySelector('.crop-viewport') as HTMLElement;
       expect(viewportEl).not.toBeNull();
       expect(viewportEl.getAttribute('role')).toBe('region');
-      expect(viewportEl.getAttribute('aria-label')).toBe('Cadrage photo');
+      expect(viewportEl.getAttribute('aria-label')).toBe(t('app.title'));
       expect(viewportEl.getAttribute('tabindex')).toBe('0');
 
       const frameWrapper = container.querySelector('.crop-frame-wrapper') as HTMLElement;
@@ -91,6 +91,24 @@ describe('Viewport and Interactive Canvas', () => {
 
       const canvas = container.querySelector('canvas.crop-canvas') as HTMLCanvasElement;
       expect(canvas).not.toBeNull();
+    });
+
+    it('updates localized aria-label according to active locale', async () => {
+      await setLocale('ar');
+      render(
+        h(CropViewport, {
+          imageBitmap: null,
+          cropWidth: 640,
+          cropHeight: 480,
+          transform: createDefaultTransform(),
+          showOvalGuide: false,
+          onTransformChange: vi.fn()
+        }),
+        container
+      );
+      const viewportEl = container.querySelector('.crop-viewport') as HTMLElement;
+      expect(viewportEl.getAttribute('aria-label')).toBe('نسك فوتو');
+      await setLocale('fr');
     });
 
     it('renders biometric oval guide and eye line when showOvalGuide is true', () => {
@@ -383,6 +401,84 @@ describe('Viewport and Interactive Canvas', () => {
       viewportEl.dispatchEvent(
         new PointerEvent('pointermove', { clientX: 80, clientY: 80, pointerId: 1, bubbles: true })
       );
+      expect(onTransformChange).not.toHaveBeenCalled();
+    });
+
+    it('ignores non-primary mouse buttons on pointer down (e.g. right click, middle click)', () => {
+      const onTransformChange = vi.fn();
+      const mockImage = createMockBitmap(800, 600);
+      render(
+        h(CropViewport, {
+          imageBitmap: mockImage,
+          cropWidth: 640,
+          cropHeight: 480,
+          transform: createDefaultTransform(),
+          showOvalGuide: true,
+          onTransformChange
+        }),
+        container
+      );
+      const viewportEl = container.querySelector('.crop-viewport') as HTMLElement;
+
+      // Right click (button === 2)
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointerdown', { clientX: 100, clientY: 100, button: 2, pointerId: 1, bubbles: true })
+      );
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: 150, clientY: 150, pointerId: 1, bubbles: true })
+      );
+      expect(onTransformChange).not.toHaveBeenCalled();
+
+      // Middle click (button === 1)
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointerdown', { clientX: 100, clientY: 100, button: 1, pointerId: 1, bubbles: true })
+      );
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: 150, clientY: 150, pointerId: 1, bubbles: true })
+      );
+      expect(onTransformChange).not.toHaveBeenCalled();
+    });
+
+    it('guards pointer down, wheel, keyboard, and touch interactions when imageBitmap is null', () => {
+      const onTransformChange = vi.fn();
+      render(
+        h(CropViewport, {
+          imageBitmap: null,
+          cropWidth: 640,
+          cropHeight: 480,
+          transform: createDefaultTransform(),
+          showOvalGuide: true,
+          onTransformChange
+        }),
+        container
+      );
+      const viewportEl = container.querySelector('.crop-viewport') as HTMLElement;
+
+      // Pointer down and move
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointerdown', { clientX: 100, clientY: 100, button: 0, pointerId: 1, bubbles: true })
+      );
+      viewportEl.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: 150, clientY: 150, pointerId: 1, bubbles: true })
+      );
+      expect(onTransformChange).not.toHaveBeenCalled();
+
+      // Wheel
+      viewportEl.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true }));
+      expect(onTransformChange).not.toHaveBeenCalled();
+
+      // Keydown
+      viewportEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      viewportEl.dispatchEvent(new KeyboardEvent('keydown', { key: '+', bubbles: true }));
+      expect(onTransformChange).not.toHaveBeenCalled();
+
+      // Touch
+      const touchEvent = new Event('touchstart', { bubbles: true, cancelable: true }) as any;
+      touchEvent.touches = [{ clientX: 0, clientY: 0 }, { clientX: 100, clientY: 0 }];
+      viewportEl.dispatchEvent(touchEvent);
+      const moveEvent = new Event('touchmove', { bubbles: true, cancelable: true }) as any;
+      moveEvent.touches = [{ clientX: 0, clientY: 0 }, { clientX: 200, clientY: 0 }];
+      viewportEl.dispatchEvent(moveEvent);
       expect(onTransformChange).not.toHaveBeenCalled();
     });
 

@@ -62,6 +62,7 @@ export function CropViewport({
 
   // Handle pointer pan
   const onPointerDown = (e: h.JSX.TargetedPointerEvent<HTMLDivElement>) => {
+    if (!imageBitmap || e.button !== 0) return;
     isDragging.current = true;
     dragStart.current = {
       x: e.clientX,
@@ -116,6 +117,7 @@ export function CropViewport({
 
   // Wheel zoom
   const onWheel = (e: h.JSX.TargetedWheelEvent<HTMLDivElement>) => {
+    if (!imageBitmap) return;
     if (typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
@@ -127,6 +129,7 @@ export function CropViewport({
 
   // Keyboard controls (1px, 10px with Shift, +/- zoom)
   const onKeyDown = (e: h.JSX.TargetedKeyboardEvent<HTMLDivElement>) => {
+    if (!imageBitmap) return;
     const delta = e.shiftKey ? 10 : 1;
     let dx = 0;
     let dy = 0;
@@ -158,6 +161,7 @@ export function CropViewport({
 
   // Tactile pinch-to-zoom (touch)
   const onTouchStart = (e: h.JSX.TargetedTouchEvent<HTMLDivElement>) => {
+    if (!imageBitmap) return;
     if (e.touches && e.touches.length === 2) {
       isDragging.current = false;
       const t1 = e.touches[0];
@@ -200,7 +204,7 @@ export function CropViewport({
       class="crop-viewport"
       tabIndex={0}
       role="region"
-      aria-label="Cadrage photo"
+      aria-label={t('app.title')}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
