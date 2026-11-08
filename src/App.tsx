@@ -117,7 +117,7 @@ export function App() {
       if (!remover.isLoaded) {
         await remover.init();
       }
-      const result = await remover.removeBackground(originalBitmap, featherRadius);
+      const result = await remover.removeBackground(originalBitmap, featherRadius, false);
       setProcessedBitmap((prev) => {
         prev?.close?.();
         return result;
@@ -139,7 +139,7 @@ export function App() {
     featherTimerRef.current = setTimeout(async () => {
       try {
         const remover = getBackgroundRemover();
-        const result = await remover.removeBackground(originalBitmap, radius);
+        const result = await remover.removeBackground(originalBitmap, radius, true);
         setProcessedBitmap((prev) => {
           prev?.close?.();
           return result;
