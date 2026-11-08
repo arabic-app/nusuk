@@ -6,6 +6,24 @@ import { t } from '../utils/i18n';
 import { hasEmptyAreas } from '../utils/transform';
 import { IconInfo } from './Icons';
 
+function getBiometricHeadPath(faceHalfW: number): string {
+  const hw = faceHalfW;
+  const p1 = (50 + hw * 0.55).toFixed(1);
+  const p2 = (50 + hw).toFixed(1);
+  const p3 = (50 + hw * 1.02).toFixed(1);
+  const p4 = (50 + hw * 0.75).toFixed(1);
+  const p5 = (50 + hw * 0.32).toFixed(1);
+  const p6 = (50 + hw * 0.16).toFixed(1);
+  const m6 = (50 - hw * 0.16).toFixed(1);
+  const m5 = (50 - hw * 0.32).toFixed(1);
+  const m4 = (50 - hw * 0.75).toFixed(1);
+  const m3 = (50 - hw * 1.02).toFixed(1);
+  const m2 = (50 - hw).toFixed(1);
+  const m1 = (50 - hw * 0.55).toFixed(1);
+
+  return `M 50 12 C ${p1} 12, ${p2} 23, ${p2} 40 C ${p3} 54, ${p4} 70, ${p5} 79 C ${p6} 81, ${m6} 81, ${m5} 79 C ${m4} 70, ${m3} 54, ${m2} 40 C ${m2} 23, ${m1} 12, 50 12 Z`;
+}
+
 export interface CropViewportProps {
   imageBitmap: ImageBitmap | null;
   cropWidth: number;
@@ -203,6 +221,23 @@ export function CropViewport({
     ? hasEmptyAreas(cropWidth, cropHeight, imageBitmap.width, imageBitmap.height, transform)
     : false;
 
+  const aspectRatio = cropWidth / cropHeight;
+  const faceHalfW = Math.min(38, Math.max(16, Number((21 / aspectRatio).toFixed(1))));
+  const headPath = getBiometricHeadPath(faceHalfW);
+  const neckLeft = (50 - faceHalfW * 0.45).toFixed(1);
+  const neckRight = (50 + faceHalfW * 0.45).toFixed(1);
+  const shoulderLeft = (50 - faceHalfW * 1.6).toFixed(1);
+  const shoulderRight = (50 + faceHalfW * 1.6).toFixed(1);
+  const shoulderPath = `M ${neckLeft} 80 C ${(Number(neckLeft) * 0.95).toFixed(1)} 87, ${(Number(shoulderLeft) * 0.8).toFixed(1)} 94, ${shoulderLeft} 100 M ${neckRight} 80 C ${(Number(neckRight) * 1.05).toFixed(1)} 87, ${(Number(shoulderRight) * 0.8).toFixed(1)} 94, ${shoulderRight} 100`;
+  const pupilLeftX = (50 - faceHalfW * 0.38).toFixed(1);
+  const pupilRightX = (50 + faceHalfW * 0.38).toFixed(1);
+  const crownLeftX = (50 - faceHalfW * 0.85).toFixed(1);
+  const crownRightX = (50 + faceHalfW * 0.85).toFixed(1);
+  const eyeLeftX = (50 - faceHalfW * 1.15).toFixed(1);
+  const eyeRightX = (50 + faceHalfW * 1.15).toFixed(1);
+  const chinLeftX = (50 - faceHalfW * 0.65).toFixed(1);
+  const chinRightX = (50 + faceHalfW * 0.65).toFixed(1);
+
   return (
     <div
       ref={containerRef}
@@ -227,10 +262,50 @@ export function CropViewport({
       >
         <canvas ref={canvasRef} class="crop-canvas" />
 
-        {/* Biometric Oval Guide */}
+        {/* Biometric Face Guide */}
         {showOvalGuide && (
           <div class="biometric-oval" aria-hidden="true">
+            <svg
+              class="biometric-svg"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              {/* Vertical symmetry axis */}
+              <line class="guide-axis" x1="50" y1="5" x2="50" y2="95" />
+
+              {/* Shoulders & neckline */}
+              <path class="guide-shoulders" d={shoulderPath} />
+
+              {/* Anatomical head contour */}
+              <path class="guide-head" d={headPath} />
+
+              {/* Crown level reference */}
+              <line class="guide-crown-line" x1={crownLeftX} y1="12" x2={crownRightX} y2="12" />
+
+              {/* Eye level line */}
+              <line class="guide-eye-line" x1={eyeLeftX} y1="42.8" x2={eyeRightX} y2="42.8" />
+              {/* Eye pupil markers */}
+              <circle class="guide-pupil" cx={pupilLeftX} cy="42.8" r="1.4" />
+              <circle class="guide-pupil" cx={pupilRightX} cy="42.8" r="1.4" />
+
+              {/* Chin level line */}
+              <line class="guide-chin-line" x1={chinLeftX} y1="80" x2={chinRightX} y2="80" />
+            </svg>
+
+            {/* DOM eye-level-line anchor */}
             <div class="eye-level-line" />
+
+            {/* Micro-badges */}
+            <div class="guide-marker marker-crown">
+              <span class="guide-tag">{t('guide.crown')}</span>
+            </div>
+            <div class="guide-marker marker-eyes">
+              <span class="guide-tag">{t('guide.eyes')}</span>
+            </div>
+            <div class="guide-marker marker-chin">
+              <span class="guide-tag">{t('guide.chin')}</span>
+            </div>
           </div>
         )}
 

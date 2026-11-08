@@ -163,6 +163,64 @@ describe('Viewport and Interactive Canvas', () => {
       expect(thirdsGrid).not.toBeNull();
     });
 
+    it('renders vector SVG biometric guide with anatomical silhouette, symmetry axis, pupils, and tags', () => {
+      const onTransformChange = vi.fn();
+      const transform = createDefaultTransform();
+
+      render(
+        h(CropViewport, {
+          imageBitmap: null,
+          cropWidth: 480,
+          cropHeight: 640,
+          transform,
+          showOvalGuide: true,
+          onTransformChange
+        }),
+        container
+      );
+
+      const svg = container.querySelector('.biometric-svg');
+      expect(svg).not.toBeNull();
+      expect(svg?.querySelector('.guide-head')).not.toBeNull();
+      expect(svg?.querySelector('.guide-shoulders')).not.toBeNull();
+      expect(svg?.querySelector('.guide-axis')).not.toBeNull();
+      expect(svg?.querySelector('.guide-crown-line')).not.toBeNull();
+      expect(svg?.querySelector('.guide-eye-line')).not.toBeNull();
+      expect(svg?.querySelector('.guide-chin-line')).not.toBeNull();
+      expect(svg?.querySelectorAll('.guide-pupil').length).toBe(2);
+
+      // Verify micro-badges
+      const tags = container.querySelectorAll('.guide-tag');
+      expect(tags.length).toBe(3);
+      expect(tags[0].textContent).toBe(t('guide.crown'));
+      expect(tags[1].textContent).toBe(t('guide.eyes'));
+      expect(tags[2].textContent).toBe(t('guide.chin'));
+    });
+
+    it('adapts biometric silhouette width proportionally for square aspect ratio', () => {
+      const onTransformChange = vi.fn();
+      const transform = createDefaultTransform();
+
+      render(
+        h(CropViewport, {
+          imageBitmap: null,
+          cropWidth: 500,
+          cropHeight: 500,
+          transform,
+          showOvalGuide: true,
+          onTransformChange
+        }),
+        container
+      );
+
+      const svg = container.querySelector('.biometric-svg');
+      expect(svg).not.toBeNull();
+      const head = svg?.querySelector('.guide-head');
+      expect(head).not.toBeNull();
+      // On square (1:1), halfW is ~21, so temple is at 50 + 21 = 71
+      expect(head?.getAttribute('d')).toContain('71.0');
+    });
+
     it('renders canvas with white background fill and transforms image', async () => {
       const onTransformChange = vi.fn();
       const mockImage = createMockBitmap(800, 600);
