@@ -289,6 +289,48 @@ describe('Export Pipeline & Web Worker', () => {
       expect(res!.adjustedQuality).toBeDefined();
     });
 
+    it('calls bitmap.close() after rendering to release resources', async () => {
+      const mockBitmap = createMockBitmap();
+      const request: RenderRequest = {
+        id: 10,
+        bitmap: mockBitmap,
+        cropWidth: 640,
+        cropHeight: 480,
+        transform: { scale: 1, tx: 0, ty: 0, rotation: 0, flipX: false },
+        config: { format: 'image/jpeg', quality: 0.95, maxBytes: 1_000_000 }
+      };
+
+      await processRenderRequest(request);
+      expect(mockBitmap.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('bounds low = Math.min(0.70, quality) without interval inversion when custom quality < 0.70 is provided', async () => {
+      let testedQualities: number[] = [];
+      MockOffscreenCanvas.blobFactory = (options) => {
+        const q = options?.quality ?? 0.50;
+        testedQualities.push(q);
+        // Returns 1,100,000 bytes if q >= 0.40, and 900,000 if q < 0.40
+        const size = q >= 0.40 ? 1_100_000 : 900_000;
+        return new Blob([new Uint8Array(size)], { type: 'image/jpeg' });
+      };
+
+      const request: RenderRequest = {
+        id: 11,
+        bitmap: createMockBitmap(),
+        cropWidth: 640,
+        cropHeight: 480,
+        transform: { scale: 1, tx: 0, ty: 0, rotation: 0, flipX: false },
+        config: { format: 'image/jpeg', quality: 0.50, maxBytes: 1_000_000 }
+      };
+
+      const res = await processRenderRequest(request);
+      expect(res).not.toBeNull();
+      // Ensure all tested qualities were in valid bounds <= 0.50
+      for (const q of testedQualities) {
+        expect(q).toBeLessThanOrEqual(0.50);
+      }
+    });
+
     it('returns null if cancelled during execution', async () => {
       const request: RenderRequest = {
         id: 5,
@@ -457,6 +499,41 @@ describe('Export Pipeline & Web Worker', () => {
       expect(mockWorker.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'cancel' })
       );
+    });
+
+    it('rejects and cleans up all listeners when worker fires an error event', async () => {
+      let errorHandler: ((e: any) => void) | null = null;
+      const removeListenerCalls: string[] = [];
+
+      const mockWorker = {
+        postMessage: vi.fn().mockImplementation(() => {
+          setTimeout(() => {
+            if (errorHandler) {
+              errorHandler({ message: 'Out of memory in canvas' });
+            }
+          }, 0);
+        }),
+        addEventListener: vi.fn().mockImplementation((event, handler) => {
+          if (event === 'error') errorHandler = handler;
+        }),
+        removeEventListener: vi.fn().mockImplementation((event) => {
+          removeListenerCalls.push(event);
+        }),
+        terminate: vi.fn()
+      } as unknown as Worker;
+
+      setExportWorker(mockWorker);
+
+      const bitmap = createMockBitmap();
+      const transform: TransformState = { scale: 1, tx: 0, ty: 0, rotation: 0, flipX: false };
+      const config: ExportConfig = { format: 'image/jpeg', quality: 0.95, maxBytes: 1_000_000 };
+
+      await expect(
+        renderAndEncode(bitmap, 640, 480, transform, config)
+      ).rejects.toThrow('Out of memory in canvas');
+
+      expect(removeListenerCalls).toContain('message');
+      expect(removeListenerCalls).toContain('error');
     });
   });
 });

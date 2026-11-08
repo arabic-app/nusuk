@@ -87,7 +87,13 @@ export async function processRenderRequest(
   const canvas = new OffscreenCanvas(cropWidth, cropHeight);
   const ctx = canvas.getContext('2d')!;
 
-  drawSmooth(ctx, bitmap, cropWidth, cropHeight, transform);
+  try {
+    drawSmooth(ctx, bitmap, cropWidth, cropHeight, transform);
+  } finally {
+    if (bitmap && typeof bitmap.close === 'function') {
+      bitmap.close();
+    }
+  }
 
   if (isCancelled && isCancelled(id)) return null;
 
@@ -111,7 +117,7 @@ export async function processRenderRequest(
   const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
 
   if (blob.size > maxBytes) {
-    let low = 0.70;
+    let low = Math.min(0.70, quality);
     let high = quality;
     let bestBlob = blob;
     let bestQuality = quality;

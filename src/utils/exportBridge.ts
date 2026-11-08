@@ -49,9 +49,15 @@ export function renderAndEncode(
 
     const cleanup = () => {
       worker.removeEventListener('message', handler);
+      worker.removeEventListener('error', onError);
       if (signal) {
         signal.removeEventListener('abort', onAbort);
       }
+    };
+
+    const onError = (e: ErrorEvent) => {
+      cleanup();
+      reject(new Error(e.message || 'Worker encoding error'));
     };
 
     const onAbort = () => {
@@ -82,6 +88,7 @@ export function renderAndEncode(
     }
 
     worker.addEventListener('message', handler);
+    worker.addEventListener('error', onError);
     worker.postMessage({
       id,
       bitmap,
