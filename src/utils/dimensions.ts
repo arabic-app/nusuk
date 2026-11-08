@@ -1,4 +1,4 @@
-import { OutputDimension, Unit } from '../types';
+import { OutputDimension, SheetConfig, SheetPreset, Unit } from '../types';
 
 export const MIN_PX = 50;
 export const MAX_PX = 4000;
@@ -44,3 +44,45 @@ export const PRESETS: Record<string, OutputDimension> = {
     lockRatio: true
   }
 };
+
+export const SHEET_PRESETS: Record<
+  Exclude<SheetPreset, 'custom'>,
+  { name: string; width: number; height: number; unit: Unit; dpi: number }
+> = {
+  '10x15': {
+    name: '10×15 cm',
+    width: 15,
+    height: 10,
+    unit: 'cm',
+    dpi: 300
+  },
+  '13x18': {
+    name: '13×18 cm',
+    width: 18,
+    height: 13,
+    unit: 'cm',
+    dpi: 300
+  },
+  'a4': {
+    name: 'A4',
+    width: 29.7,
+    height: 21,
+    unit: 'cm',
+    dpi: 300
+  }
+};
+
+export function createDefaultSheetConfig(): SheetConfig {
+  return {
+    enabled: false,
+    preset: '10x15',
+    width: 15,
+    height: 10,
+    unit: 'cm',
+    dpi: 300,
+    orientation: 'auto',
+    cutGuides: true,
+    spacingMm: 2,
+    marginMm: 3
+  };
+}

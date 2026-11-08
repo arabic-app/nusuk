@@ -55,5 +55,21 @@
   "aria.size_presets": "أبعاد جاهزة",
   "aria.lang_selector": "اللغة",
   "aria.theme_toggle": "تبديل المظهر",
-  "size.unit": "الوحدة"
+  "size.unit": "الوحدة",
+  "palette.title": "لوحة الصور المطبوعة",
+  "palette.toggle": "إنشاء لوحة صور (شبكة مكررة)",
+  "palette.preset_10x15": "10×15 سم",
+  "palette.preset_13x18": "13×18 سم",
+  "palette.preset_a4": "A4 (21×29.7 سم)",
+  "palette.preset_custom": "مخصص",
+  "palette.orientation": "الاتجاه",
+  "palette.orientation_auto": "تلقائي",
+  "palette.orientation_landscape": "أفقي",
+  "palette.orientation_portrait": "عمودي",
+  "palette.cut_guides": "علامات القص",
+  "palette.info": "{{count}} صور في اللوحة ({{cols}} × {{rows}})",
+  "palette.preview_btn": "معاينة اللوحة",
+  "palette.preview_title": "معاينة لوحة الصور",
+  "palette.download_btn": "تنزيل اللوحة",
+  "palette.close": "إغلاق"
 }

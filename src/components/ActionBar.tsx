@@ -1,4 +1,6 @@
 // src/components/ActionBar.tsx
+import { SheetConfig } from '../types';
+import { SHEET_PRESETS } from '../utils/dimensions';
 import { t } from '../utils/i18n';
 import { MAX_NUSUK_BYTES, formatFileSize } from '../utils/exportBridge';
 import { IconDownload } from './Icons';
@@ -9,6 +11,8 @@ export interface ActionBarProps {
   bytes: number;
   onDownload: () => void;
   disabled: boolean;
+  sheetConfig?: SheetConfig;
+  totalPhotos?: number;
 }
 
 export function ActionBar({
@@ -16,7 +20,9 @@ export function ActionBar({
   cropHeight,
   bytes,
   onDownload,
-  disabled
+  disabled,
+  sheetConfig,
+  totalPhotos
 }: ActionBarProps) {
   const kb = formatFileSize(bytes);
   const ratio = bytes / MAX_NUSUK_BYTES;
@@ -28,10 +34,21 @@ export function ActionBar({
     gaugeColor = 'var(--gauge-orange)';
   }
 
+  const isSheet = sheetConfig?.enabled;
+  const sheetPresetLabel = sheetConfig
+    ? sheetConfig.preset === 'custom'
+      ? `${sheetConfig.width}×${sheetConfig.height} ${sheetConfig.unit}`
+      : SHEET_PRESETS[sheetConfig.preset]?.name || sheetConfig.preset
+    : '';
+
   return (
     <footer class="app-action-bar" role="contentinfo">
       <div class="action-info">
-        <span class="info-dim">{cropWidth} × {cropHeight} px</span>
+        <span class="info-dim">
+          {isSheet
+            ? `${sheetPresetLabel} (${totalPhotos ?? 0} photos)`
+            : `${cropWidth} × ${cropHeight} px`}
+        </span>
         <div class="weight-gauge-container">
           <div class="weight-gauge-track" role="progressbar" aria-valuenow={bytes} aria-valuemin={0} aria-valuemax={MAX_NUSUK_BYTES}>
             <div
@@ -55,7 +72,7 @@ export function ActionBar({
         disabled={disabled}
       >
         <IconDownload size={18} />
-        <span>{t('export.download')}</span>
+        <span>{isSheet ? t('palette.download_btn') : t('export.download')}</span>
       </button>
     </footer>
   );

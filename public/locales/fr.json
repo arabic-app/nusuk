@@ -55,5 +55,21 @@
   "aria.size_presets": "Préréglages de taille",
   "aria.lang_selector": "Langue",
   "aria.theme_toggle": "Basculer le thème",
-  "size.unit": "Unité"
+  "size.unit": "Unité",
+  "palette.title": "Planche photo",
+  "palette.toggle": "Créer une planche photo (palette)",
+  "palette.preset_10x15": "10×15 cm",
+  "palette.preset_13x18": "13×18 cm",
+  "palette.preset_a4": "A4 (21×29,7 cm)",
+  "palette.preset_custom": "Personnalisé",
+  "palette.orientation": "Orientation",
+  "palette.orientation_auto": "Auto",
+  "palette.orientation_landscape": "Paysage",
+  "palette.orientation_portrait": "Portrait",
+  "palette.cut_guides": "Guides de découpe",
+  "palette.info": "{{count}} photos par planche ({{cols}} × {{rows}})",
+  "palette.preview_btn": "Aperçu de la planche",
+  "palette.preview_title": "Aperçu de la planche photo",
+  "palette.download_btn": "Télécharger la planche",
+  "palette.close": "Fermer"
 }

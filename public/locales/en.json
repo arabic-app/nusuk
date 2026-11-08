@@ -55,5 +55,21 @@
   "aria.size_presets": "Size presets",
   "aria.lang_selector": "Language",
   "aria.theme_toggle": "Toggle theme",
-  "size.unit": "Unit"
+  "size.unit": "Unit",
+  "palette.title": "Print Photo Sheet",
+  "palette.toggle": "Create photo sheet (palette)",
+  "palette.preset_10x15": "10×15 cm (4×6 in)",
+  "palette.preset_13x18": "13×18 cm (5×7 in)",
+  "palette.preset_a4": "A4 (21×29.7 cm)",
+  "palette.preset_custom": "Custom",
+  "palette.orientation": "Orientation",
+  "palette.orientation_auto": "Auto",
+  "palette.orientation_landscape": "Landscape",
+  "palette.orientation_portrait": "Portrait",
+  "palette.cut_guides": "Cutting guides",
+  "palette.info": "{{count}} photos per sheet ({{cols}} × {{rows}})",
+  "palette.preview_btn": "Sheet preview",
+  "palette.preview_title": "Photo Sheet Preview",
+  "palette.download_btn": "Download sheet",
+  "palette.close": "Close"
 }

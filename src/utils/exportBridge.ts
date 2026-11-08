@@ -1,4 +1,4 @@
-import { EncodedResult, ExportConfig, TransformState } from '../types';
+import { EncodedResult, ExportConfig, TransformState, SheetConfig } from '../types';
 import WorkerConstructor from '../workers/export.worker.ts?worker';
 
 export const MAX_NUSUK_BYTES = 1_000_000;
@@ -7,8 +7,20 @@ export function formatFileSize(bytes: number): string {
   return (bytes / 1000).toFixed(0);
 }
 
-export function getExportFilename(w: number, h: number, format: string): string {
+export function getExportFilename(
+  w: number,
+  h: number,
+  format: string,
+  sheetConfig?: SheetConfig
+): string {
   const ext = format === 'image/png' ? 'png' : 'jpg';
+  if (sheetConfig && sheetConfig.enabled) {
+    const presetLabel =
+      sheetConfig.preset === 'custom'
+        ? `${sheetConfig.width}x${sheetConfig.height}${sheetConfig.unit}`
+        : sheetConfig.preset;
+    return `planche-photo-nusuk-${presetLabel}.${ext}`;
+  }
   return `photo-nusuk-${w}x${h}.${ext}`;
 }
 
@@ -42,8 +54,20 @@ export function renderAndEncode(
   cropHeight: number,
   transform: TransformState,
   config: ExportConfig,
-  signal?: AbortSignal
+  sheetConfigOrSignal?: SheetConfig | AbortSignal,
+  maybeSignal?: AbortSignal
 ): Promise<EncodedResult> {
+  let sheetConfig: SheetConfig | undefined;
+  let signal: AbortSignal | undefined;
+
+  if (sheetConfigOrSignal && 'aborted' in sheetConfigOrSignal) {
+    signal = sheetConfigOrSignal as AbortSignal;
+    sheetConfig = undefined;
+  } else {
+    sheetConfig = sheetConfigOrSignal as SheetConfig | undefined;
+    signal = maybeSignal;
+  }
+
   if (signal?.aborted) {
     return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
   }
@@ -100,7 +124,8 @@ export function renderAndEncode(
       cropWidth,
       cropHeight,
       transform,
-      config
+      config,
+      sheetConfig
     });
   });
 }

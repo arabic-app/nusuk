@@ -4,6 +4,8 @@ import {
   convertFromPixels,
   clampDimension,
   PRESETS,
+  SHEET_PRESETS,
+  createDefaultSheetConfig,
   MIN_PX,
   MAX_PX
 } from '../src/utils/dimensions';
@@ -60,6 +62,22 @@ describe('Dimensions engine', () => {
     expect(PRESETS.nusuk.unit).toBe('px');
     expect(PRESETS.nusuk.dpi).toBe(300);
     expect(PRESETS.nusuk.lockRatio).toBe(true);
+  });
+
+  it('defines valid sheet presets and default config', () => {
+    const defaultCfg = createDefaultSheetConfig();
+    expect(defaultCfg.enabled).toBe(false);
+    expect(defaultCfg.preset).toBe('10x15');
+    expect(defaultCfg.orientation).toBe('auto');
+    expect(defaultCfg.cutGuides).toBe(true);
+
+    expect(SHEET_PRESETS['10x15']).toBeDefined();
+    expect(SHEET_PRESETS['10x15'].width).toBe(15);
+    expect(SHEET_PRESETS['10x15'].height).toBe(10);
+    expect(SHEET_PRESETS['10x15'].unit).toBe('cm');
+
+    expect(SHEET_PRESETS['13x18']).toBeDefined();
+    expect(SHEET_PRESETS['a4']).toBeDefined();
   });
 
   it('contains Passport (35x45 mm) and Intl (2x2 in) presets', () => {

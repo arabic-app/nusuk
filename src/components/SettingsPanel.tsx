@@ -1,6 +1,7 @@
 // src/components/SettingsPanel.tsx
-import { OutputDimension, ExportConfig, Unit } from '../types';
-import { PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
+import { OutputDimension, ExportConfig, Unit, SheetConfig } from '../types';
+import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
+import { calculateSheetLayout } from '../utils/sheetTiling';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
 import { t } from '../utils/i18n';
 import {
@@ -10,7 +11,9 @@ import {
   IconUndo,
   IconInfo,
   IconSave,
-  IconAlert
+  IconAlert,
+  IconGrid,
+  IconScissors
 } from './Icons';
 
 export interface SettingsPanelProps {
@@ -27,6 +30,9 @@ export interface SettingsPanelProps {
   onFeatherChange: (radius: number) => void;
   onCompareStart?: () => void;
   onCompareEnd?: () => void;
+  sheetConfig?: SheetConfig;
+  onSheetConfigChange?: (cfg: SheetConfig) => void;
+  onOpenSheetPreview?: () => void;
 }
 
 export function SettingsPanel({
@@ -42,7 +48,10 @@ export function SettingsPanel({
   onToggleBgRemoval,
   onFeatherChange,
   onCompareStart,
-  onCompareEnd
+  onCompareEnd,
+  sheetConfig,
+  onSheetConfigChange,
+  onOpenSheetPreview
 }: SettingsPanelProps) {
   const isNusukPreset =
     dimension.width === PRESETS.nusuk.width &&
@@ -209,6 +218,252 @@ export function SettingsPanel({
           <span>{t('size.lock_ratio')}</span>
         </label>
       </div>
+
+      {/* Photo Sheet (Palette) Card */}
+      {sheetConfig && onSheetConfigChange && (
+        <div class="settings-card palette-card">
+          <h3 class="card-title">
+            <IconGrid size={18} class="card-title-icon" />
+            <span>{t('palette.title')}</span>
+          </h3>
+
+          <label class="toggle-label">
+            <input
+              type="checkbox"
+              name="palette-enabled"
+              checked={sheetConfig.enabled}
+              onChange={(e) =>
+                onSheetConfigChange({
+                  ...sheetConfig,
+                  enabled: (e.target as HTMLInputElement).checked
+                })
+              }
+            />
+            <span class="toggle-text">{t('palette.toggle')}</span>
+          </label>
+
+          {sheetConfig.enabled && (
+            <div class="palette-expanded-options">
+              {/* Presets */}
+              <div class="preset-buttons" role="group" aria-label={t('palette.title')}>
+                <button
+                  type="button"
+                  class={`btn btn-sm ${sheetConfig.preset === '10x15' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => {
+                    const preset = SHEET_PRESETS['10x15'];
+                    onSheetConfigChange({
+                      ...sheetConfig,
+                      preset: '10x15',
+                      width: preset.width,
+                      height: preset.height,
+                      unit: preset.unit,
+                      dpi: preset.dpi
+                    });
+                  }}
+                >
+                  {t('palette.preset_10x15')}
+                </button>
+                <button
+                  type="button"
+                  class={`btn btn-sm ${sheetConfig.preset === '13x18' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => {
+                    const preset = SHEET_PRESETS['13x18'];
+                    onSheetConfigChange({
+                      ...sheetConfig,
+                      preset: '13x18',
+                      width: preset.width,
+                      height: preset.height,
+                      unit: preset.unit,
+                      dpi: preset.dpi
+                    });
+                  }}
+                >
+                  {t('palette.preset_13x18')}
+                </button>
+                <button
+                  type="button"
+                  class={`btn btn-sm ${sheetConfig.preset === 'a4' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => {
+                    const preset = SHEET_PRESETS['a4'];
+                    onSheetConfigChange({
+                      ...sheetConfig,
+                      preset: 'a4',
+                      width: preset.width,
+                      height: preset.height,
+                      unit: preset.unit,
+                      dpi: preset.dpi
+                    });
+                  }}
+                >
+                  {t('palette.preset_a4')}
+                </button>
+                <button
+                  type="button"
+                  class={`btn btn-sm ${sheetConfig.preset === 'custom' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() =>
+                    onSheetConfigChange({
+                      ...sheetConfig,
+                      preset: 'custom'
+                    })
+                  }
+                >
+                  {t('palette.preset_custom')}
+                </button>
+              </div>
+
+              {/* Custom dimensions if preset === 'custom' */}
+              {sheetConfig.preset === 'custom' && (
+                <div class="custom-dim-grid">
+                  <div class="form-group">
+                    <label for="sheet-width">{t('size.width')}</label>
+                    <input
+                      id="sheet-width"
+                      name="sheet-width"
+                      type="number"
+                      min="1"
+                      value={sheetConfig.width}
+                      onChange={(e) =>
+                        onSheetConfigChange({
+                          ...sheetConfig,
+                          width: parseFloat((e.target as HTMLInputElement).value) || sheetConfig.width
+                        })
+                      }
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="sheet-height">{t('size.height')}</label>
+                    <input
+                      id="sheet-height"
+                      name="sheet-height"
+                      type="number"
+                      min="1"
+                      value={sheetConfig.height}
+                      onChange={(e) =>
+                        onSheetConfigChange({
+                          ...sheetConfig,
+                          height: parseFloat((e.target as HTMLInputElement).value) || sheetConfig.height
+                        })
+                      }
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="sheet-unit">{t('size.unit')}</label>
+                    <select
+                      id="sheet-unit"
+                      name="sheet-unit"
+                      value={sheetConfig.unit}
+                      onChange={(e) =>
+                        onSheetConfigChange({
+                          ...sheetConfig,
+                          unit: (e.target as HTMLSelectElement).value as Unit
+                        })
+                      }
+                    >
+                      <option value="cm">cm</option>
+                      <option value="mm">mm</option>
+                      <option value="in">in</option>
+                      <option value="px">px</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="sheet-dpi">{t('size.dpi')}</label>
+                    <input
+                      id="sheet-dpi"
+                      name="sheet-dpi"
+                      type="number"
+                      min="72"
+                      max="1200"
+                      value={sheetConfig.dpi}
+                      onChange={(e) =>
+                        onSheetConfigChange({
+                          ...sheetConfig,
+                          dpi: parseInt((e.target as HTMLInputElement).value, 10) || sheetConfig.dpi
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Orientation selector */}
+              <div class="form-group palette-orientation-group">
+                <label>{t('palette.orientation')}</label>
+                <div class="segmented-control" role="radiogroup">
+                  <button
+                    type="button"
+                    class={`segment-btn ${sheetConfig.orientation === 'auto' ? 'active' : ''}`}
+                    onClick={() => onSheetConfigChange({ ...sheetConfig, orientation: 'auto' })}
+                  >
+                    {t('palette.orientation_auto')}
+                  </button>
+                  <button
+                    type="button"
+                    class={`segment-btn ${sheetConfig.orientation === 'landscape' ? 'active' : ''}`}
+                    onClick={() => onSheetConfigChange({ ...sheetConfig, orientation: 'landscape' })}
+                  >
+                    {t('palette.orientation_landscape')}
+                  </button>
+                  <button
+                    type="button"
+                    class={`segment-btn ${sheetConfig.orientation === 'portrait' ? 'active' : ''}`}
+                    onClick={() => onSheetConfigChange({ ...sheetConfig, orientation: 'portrait' })}
+                  >
+                    {t('palette.orientation_portrait')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Cut guides option */}
+              <label class="checkbox-label cut-guides-label">
+                <input
+                  type="checkbox"
+                  name="cut-guides"
+                  checked={sheetConfig.cutGuides}
+                  onChange={(e) =>
+                    onSheetConfigChange({
+                      ...sheetConfig,
+                      cutGuides: (e.target as HTMLInputElement).checked
+                    })
+                  }
+                />
+                <IconScissors size={15} class="icon-inline" />
+                <span>{t('palette.cut_guides')}</span>
+              </label>
+
+              {/* Info badge */}
+              {(() => {
+                const cropWidthPx = clampDimension(convertToPixels(dimension.width, dimension.unit, dimension.dpi));
+                const cropHeightPx = clampDimension(convertToPixels(dimension.height, dimension.unit, dimension.dpi));
+                const layout = calculateSheetLayout(cropWidthPx, cropHeightPx, sheetConfig);
+                return (
+                  <div class="palette-info-badge">
+                    <IconInfo size={16} />
+                    <span>
+                      {t('palette.info', {
+                        count: layout.totalPhotos,
+                        cols: layout.cols,
+                        rows: layout.rows
+                      })}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Preview Button */}
+              {onOpenSheetPreview && (
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-block preview-sheet-btn"
+                  onClick={onOpenSheetPreview}
+                >
+                  <IconEye size={16} />
+                  <span>{t('palette.preview_btn')}</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Background Removal Card */}
       <div class="settings-card">

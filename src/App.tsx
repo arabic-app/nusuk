@@ -5,6 +5,7 @@ import { Dropzone } from './components/Dropzone';
 import { CropViewport } from './components/CropViewport';
 import { ActionBar } from './components/ActionBar';
 import { SettingsPanel } from './components/SettingsPanel';
+import { SheetPreviewModal } from './components/SheetPreviewModal';
 import {
   IconZoomIn,
   IconZoomOut,
@@ -18,8 +19,9 @@ import {
   IconChangePhoto,
   IconAlert
 } from './components/Icons';
-import { OutputDimension, TransformState, ExportConfig } from './types';
-import { PRESETS, convertToPixels, clampDimension } from './utils/dimensions';
+import { OutputDimension, TransformState, ExportConfig, SheetConfig } from './types';
+import { PRESETS, convertToPixels, clampDimension, createDefaultSheetConfig } from './utils/dimensions';
+import { calculateSheetLayout } from './utils/sheetTiling';
 import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransform } from './utils/transform';
 import { detectFace, computeFaceFraming } from './utils/faceDetection';
 import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
@@ -57,6 +59,9 @@ export function App() {
     quality: 0.95,
     maxBytes: MAX_NUSUK_BYTES
   });
+
+  const [sheetConfig, setSheetConfig] = useState<SheetConfig>(createDefaultSheetConfig());
+  const [showSheetPreview, setShowSheetPreview] = useState(false);
 
   const [encodedBytes, setEncodedBytes] = useState<number>(0);
   const [encodedBlob, setEncodedBlob] = useState<Blob | null>(null);
@@ -189,6 +194,7 @@ export function App() {
           cropH,
           transform,
           exportConfig,
+          sheetConfig,
           controller.signal
         );
         setEncodedBytes(res.bytes);
@@ -205,12 +211,12 @@ export function App() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [activeBitmap, cropW, cropH, transform, exportConfig]);
+  }, [activeBitmap, cropW, cropH, transform, exportConfig, sheetConfig]);
 
   const handleDownload = () => {
     if (!encodedBlob) return;
     try {
-      const filename = getExportFilename(cropW, cropH, exportConfig.format);
+      const filename = getExportFilename(cropW, cropH, exportConfig.format, sheetConfig);
       const url = URL.createObjectURL(encodedBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -250,6 +256,8 @@ export function App() {
     setEncodedBytes(0);
     setAdjustedQuality(undefined);
     setErrorMsg(null);
+    setSheetConfig(createDefaultSheetConfig());
+    setShowSheetPreview(false);
   };
 
   return (
@@ -427,6 +435,12 @@ export function App() {
               onFeatherChange={handleFeatherChange}
               onCompareStart={() => setIsComparing(true)}
               onCompareEnd={() => setIsComparing(false)}
+              sheetConfig={sheetConfig}
+              onSheetConfigChange={(cfg) => {
+                setEncodedBlob(null);
+                setSheetConfig(cfg);
+              }}
+              onOpenSheetPreview={() => setShowSheetPreview(true)}
             />
           </div>
         )}
@@ -439,8 +453,20 @@ export function App() {
           bytes={encodedBytes}
           onDownload={handleDownload}
           disabled={!encodedBlob}
+          sheetConfig={sheetConfig}
+          totalPhotos={calculateSheetLayout(cropW, cropH, sheetConfig).totalPhotos}
         />
       )}
+
+      <SheetPreviewModal
+        isOpen={showSheetPreview}
+        onClose={() => setShowSheetPreview(false)}
+        bitmap={activeBitmap}
+        transform={transform}
+        dimension={dimension}
+        sheetConfig={sheetConfig}
+        onDownload={handleDownload}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { TransformState, ExportConfig } from '../types';
+import { TransformState, ExportConfig, SheetConfig } from '../types';
+import { calculateSheetLayout, renderSheet } from '../utils/sheetTiling';
 
 export interface RenderRequest {
   id: number;
@@ -7,6 +8,7 @@ export interface RenderRequest {
   cropHeight: number;
   transform: TransformState;
   config: ExportConfig;
+  sheetConfig?: SheetConfig;
   type?: 'render';
 }
 
@@ -97,16 +99,29 @@ export async function processRenderRequest(
 
   if (isCancelled && isCancelled(id)) return null;
 
+  let targetCanvas: OffscreenCanvas = canvas;
+  let finalWidth = cropWidth;
+  let finalHeight = cropHeight;
+
+  if (request.sheetConfig && request.sheetConfig.enabled) {
+    const layout = calculateSheetLayout(cropWidth, cropHeight, request.sheetConfig);
+    if (layout.totalPhotos > 0) {
+      targetCanvas = renderSheet(canvas, layout, request.sheetConfig.cutGuides);
+      finalWidth = layout.sheetWidthPx;
+      finalHeight = layout.sheetHeightPx;
+    }
+  }
+
   if (config.format === 'image/png') {
-    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    const blob = await targetCanvas.convertToBlob({ type: 'image/png' });
     if (isCancelled && isCancelled(id)) return null;
 
     return {
       id,
       blob,
       bytes: blob.size,
-      width: cropWidth,
-      height: cropHeight
+      width: finalWidth,
+      height: finalHeight
     };
   }
 
@@ -114,7 +129,7 @@ export async function processRenderRequest(
   const maxBytes = config.maxBytes ?? 1_000_000;
   const initialQuality = config.quality ?? 0.95;
   const quality = initialQuality;
-  const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
+  const blob = await targetCanvas.convertToBlob({ type: 'image/jpeg', quality });
 
   if (blob.size > maxBytes) {
     let low = Math.min(0.70, quality);
@@ -126,7 +141,7 @@ export async function processRenderRequest(
       if (isCancelled && isCancelled(id)) return null;
 
       const mid = Number(((low + high) / 2).toFixed(2));
-      const testBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: mid });
+      const testBlob = await targetCanvas.convertToBlob({ type: 'image/jpeg', quality: mid });
 
       if (testBlob.size <= maxBytes) {
         bestBlob = testBlob;
@@ -148,8 +163,8 @@ export async function processRenderRequest(
       id,
       blob: bestBlob,
       bytes: bestBlob.size,
-      width: cropWidth,
-      height: cropHeight,
+      width: finalWidth,
+      height: finalHeight,
       adjustedQuality: bestQuality !== initialQuality ? bestQuality : undefined
     };
   }
@@ -158,8 +173,8 @@ export async function processRenderRequest(
     id,
     blob,
     bytes: blob.size,
-    width: cropWidth,
-    height: cropHeight
+    width: finalWidth,
+    height: finalHeight
   };
 }
 

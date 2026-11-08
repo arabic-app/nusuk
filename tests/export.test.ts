@@ -34,7 +34,12 @@ class MockOffscreenCanvas {
       translate: vi.fn(),
       rotate: vi.fn(),
       scale: vi.fn(),
-      drawImage: vi.fn()
+      drawImage: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn()
     };
   }
 
@@ -217,6 +222,34 @@ describe('Export Pipeline & Web Worker', () => {
       expect(res!.width).toBe(640);
       expect(res!.height).toBe(480);
       expect(res!.adjustedQuality).toBeUndefined();
+    });
+
+    it('tiles photos into a sheet when sheetConfig is enabled', async () => {
+      const request: RenderRequest = {
+        id: 99,
+        bitmap: createMockBitmap(),
+        cropWidth: 413,
+        cropHeight: 531,
+        transform: { scale: 1, tx: 0, ty: 0, rotation: 0, flipX: false },
+        config: { format: 'image/png', quality: 1, maxBytes: 5_000_000 },
+        sheetConfig: {
+          enabled: true,
+          preset: '10x15',
+          width: 15,
+          height: 10,
+          unit: 'cm',
+          dpi: 300,
+          orientation: 'auto',
+          cutGuides: true,
+          spacingMm: 2,
+          marginMm: 3
+        }
+      };
+
+      const res = await processRenderRequest(request);
+      expect(res).not.toBeNull();
+      expect(res!.width).toBe(1772);
+      expect(res!.height).toBe(1181);
     });
 
     it('encodes JPEG without adjusting quality when initial size <= maxBytes', async () => {

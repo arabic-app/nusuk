@@ -4,10 +4,12 @@ import { h, render } from 'preact';
 import { Header } from '../src/components/Header';
 import { ActionBar } from '../src/components/ActionBar';
 import { SettingsPanel } from '../src/components/SettingsPanel';
+import { SheetPreviewModal } from '../src/components/SheetPreviewModal';
 import { App } from '../src/App';
 import { getExportFilename, MAX_NUSUK_BYTES } from '../src/utils/exportBridge';
 import * as exportBridge from '../src/utils/exportBridge';
-import { PRESETS } from '../src/utils/dimensions';
+import { PRESETS, createDefaultSheetConfig } from '../src/utils/dimensions';
+import { createDefaultTransform } from '../src/utils/transform';
 import { setLocale, getLocale, t } from '../src/utils/i18n';
 import { setTheme, getStoredTheme } from '../src/utils/theme';
 
@@ -48,6 +50,21 @@ describe('App filename generator', () => {
     expect(getExportFilename(640, 480, 'image/jpeg')).toBe('photo-nusuk-640x480.jpg');
     expect(getExportFilename(413, 531, 'image/png')).toBe('photo-nusuk-413x531.png');
     expect(getExportFilename(600, 600, 'image/jpeg')).toBe('photo-nusuk-600x600.jpg');
+
+    // Sheet filename
+    const sheetCfg = {
+      enabled: true,
+      preset: '10x15' as const,
+      width: 15,
+      height: 10,
+      unit: 'cm' as const,
+      dpi: 300,
+      orientation: 'auto' as const,
+      cutGuides: true,
+      spacingMm: 2,
+      marginMm: 3
+    };
+    expect(getExportFilename(1772, 1181, 'image/jpeg', sheetCfg)).toBe('planche-photo-nusuk-10x15.jpg');
   });
 });
 
@@ -446,6 +463,266 @@ describe('SettingsPanel component', () => {
     expect(qualityInfo).toBeDefined();
     expect(qualityInfo?.textContent).toContain('0.82');
   });
+
+  it('renders photo sheet (palette) section and handles toggle and configuration', () => {
+    const onSheetConfigChange = vi.fn();
+    const onOpenSheetPreview = vi.fn();
+    const sheetConfig = createDefaultSheetConfig();
+
+    render(
+      h(SettingsPanel, {
+        dimension: PRESETS.nusuk,
+        onDimensionChange: vi.fn(),
+        exportConfig: { format: 'image/jpeg', quality: 0.95, maxBytes: MAX_NUSUK_BYTES },
+        onExportConfigChange: vi.fn(),
+        encodedBytes: 300_000,
+        bgRemovalActive: false,
+        bgLoading: false,
+        featherRadius: 0,
+        onToggleBgRemoval: vi.fn(),
+        onFeatherChange: vi.fn(),
+        sheetConfig,
+        onSheetConfigChange,
+        onOpenSheetPreview
+      }),
+      container
+    );
+
+    const paletteCard = container.querySelector('.palette-card');
+    expect(paletteCard).toBeDefined();
+    expect(paletteCard?.textContent).toContain('Planche photo');
+
+    // Toggle enabled checkbox
+    const toggleInput = paletteCard?.querySelector<HTMLInputElement>('input[name="palette-enabled"]');
+    expect(toggleInput?.checked).toBe(false);
+    toggleInput?.click();
+    expect(onSheetConfigChange).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }));
+  });
+
+  it('renders expanded palette options when enabled and triggers preset, orientation, cut guides, and preview', () => {
+    const onSheetConfigChange = vi.fn();
+    const onOpenSheetPreview = vi.fn();
+    const sheetConfig = {
+      ...createDefaultSheetConfig(),
+      enabled: true,
+      preset: '10x15' as const
+    };
+
+    render(
+      h(SettingsPanel, {
+        dimension: PRESETS.nusuk,
+        onDimensionChange: vi.fn(),
+        exportConfig: { format: 'image/jpeg', quality: 0.95, maxBytes: MAX_NUSUK_BYTES },
+        onExportConfigChange: vi.fn(),
+        encodedBytes: 300_000,
+        bgRemovalActive: false,
+        bgLoading: false,
+        featherRadius: 0,
+        onToggleBgRemoval: vi.fn(),
+        onFeatherChange: vi.fn(),
+        sheetConfig,
+        onSheetConfigChange,
+        onOpenSheetPreview
+      }),
+      container
+    );
+
+    // Preset buttons
+    const preset13x18 = Array.from(container.querySelectorAll<HTMLButtonElement>('.palette-card .preset-buttons button')).find(
+      (b) => b.textContent?.includes('13×18')
+    );
+    expect(preset13x18).toBeDefined();
+    preset13x18?.click();
+    expect(onSheetConfigChange).toHaveBeenCalledWith(expect.objectContaining({ preset: '13x18', width: 18, height: 13 }));
+
+    // Orientation toggle
+    const landscapeBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.segment-btn')).find(
+      (b) => b.textContent?.includes('Paysage')
+    );
+    expect(landscapeBtn).toBeDefined();
+    landscapeBtn?.click();
+    expect(onSheetConfigChange).toHaveBeenCalledWith(expect.objectContaining({ orientation: 'landscape' }));
+
+    // Cut guides checkbox
+    const cutCheckbox = container.querySelector<HTMLInputElement>('input[name="cut-guides"]');
+    expect(cutCheckbox?.checked).toBe(true);
+    cutCheckbox?.click();
+    expect(onSheetConfigChange).toHaveBeenCalledWith(expect.objectContaining({ cutGuides: false }));
+
+    // Info badge
+    const infoBadge = container.querySelector('.palette-info-badge');
+    expect(infoBadge).toBeDefined();
+    expect(infoBadge?.textContent).toContain('photos par planche');
+
+    // Preview button
+    const previewBtn = container.querySelector<HTMLButtonElement>('.preview-sheet-btn');
+    expect(previewBtn).toBeDefined();
+    previewBtn?.click();
+    expect(onOpenSheetPreview).toHaveBeenCalled();
+  });
+
+  it('renders custom dimension inputs when preset is custom', () => {
+    const onSheetConfigChange = vi.fn();
+    const sheetConfig = {
+      ...createDefaultSheetConfig(),
+      enabled: true,
+      preset: 'custom' as const,
+      width: 20,
+      height: 30,
+      unit: 'cm' as const,
+      dpi: 300
+    };
+
+    render(
+      h(SettingsPanel, {
+        dimension: PRESETS.nusuk,
+        onDimensionChange: vi.fn(),
+        exportConfig: { format: 'image/jpeg', quality: 0.95, maxBytes: MAX_NUSUK_BYTES },
+        onExportConfigChange: vi.fn(),
+        encodedBytes: 300_000,
+        bgRemovalActive: false,
+        bgLoading: false,
+        featherRadius: 0,
+        onToggleBgRemoval: vi.fn(),
+        onFeatherChange: vi.fn(),
+        sheetConfig,
+        onSheetConfigChange
+      }),
+      container
+    );
+
+    const widthInput = container.querySelector<HTMLInputElement>('#sheet-width');
+    const heightInput = container.querySelector<HTMLInputElement>('#sheet-height');
+    const unitSelect = container.querySelector<HTMLSelectElement>('#sheet-unit');
+    const dpiInput = container.querySelector<HTMLInputElement>('#sheet-dpi');
+
+    expect(widthInput?.value).toBe('20');
+    expect(heightInput?.value).toBe('30');
+    expect(unitSelect?.value).toBe('cm');
+    expect(dpiInput?.value).toBe('300');
+
+    widthInput!.value = '25';
+    widthInput?.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(onSheetConfigChange).toHaveBeenCalledWith(expect.objectContaining({ width: 25 }));
+  });
+});
+
+describe('SheetPreviewModal component', () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    setLocale('fr');
+  });
+
+  afterEach(() => {
+    render(null, container);
+    container.remove();
+  });
+
+  it('does not render when isOpen is false', () => {
+    render(
+      h(SheetPreviewModal, {
+        isOpen: false,
+        onClose: vi.fn(),
+        bitmap: null,
+        transform: createDefaultTransform(),
+        dimension: PRESETS.nusuk,
+        sheetConfig: createDefaultSheetConfig(),
+        onDownload: vi.fn()
+      }),
+      container
+    );
+
+    expect(container.querySelector('.sheet-modal')).toBeNull();
+  });
+
+  it('renders dialog with header, canvas, and buttons when isOpen is true', () => {
+    const onClose = vi.fn();
+    const onDownload = vi.fn();
+
+    render(
+      h(SheetPreviewModal, {
+        isOpen: true,
+        onClose,
+        bitmap: null,
+        transform: createDefaultTransform(),
+        dimension: PRESETS.nusuk,
+        sheetConfig: createDefaultSheetConfig(),
+        onDownload
+      }),
+      container
+    );
+
+    const dialog = container.querySelector('.sheet-modal');
+    expect(dialog).toBeDefined();
+    expect(dialog?.getAttribute('role')).toBe('dialog');
+
+    const title = container.querySelector('#sheet-preview-title');
+    expect(title?.textContent).toContain('Aperçu de la planche photo');
+
+    const canvas = container.querySelector('.sheet-preview-canvas');
+    expect(canvas).toBeDefined();
+
+    // Close button in header
+    const closeBtn = container.querySelector<HTMLButtonElement>('.sheet-modal-close');
+    closeBtn?.click();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('closes on backdrop click and on Escape key', async () => {
+    const onClose = vi.fn();
+
+    render(
+      h(SheetPreviewModal, {
+        isOpen: true,
+        onClose,
+        bitmap: null,
+        transform: createDefaultTransform(),
+        dimension: PRESETS.nusuk,
+        sheetConfig: createDefaultSheetConfig(),
+        onDownload: vi.fn()
+      }),
+      container
+    );
+
+    // Allow useEffect to mount event listener
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Backdrop click
+    const backdrop = container.querySelector<HTMLDivElement>('.sheet-modal-backdrop');
+    backdrop?.click();
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    // Escape key
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('triggers onDownload and closes when clicking download button', () => {
+    const onClose = vi.fn();
+    const onDownload = vi.fn();
+
+    render(
+      h(SheetPreviewModal, {
+        isOpen: true,
+        onClose,
+        bitmap: null,
+        transform: createDefaultTransform(),
+        dimension: PRESETS.nusuk,
+        sheetConfig: createDefaultSheetConfig(),
+        onDownload
+      }),
+      container
+    );
+
+    const downloadBtn = container.querySelector<HTMLButtonElement>('.sheet-modal-footer .btn-primary');
+    expect(downloadBtn).toBeDefined();
+    downloadBtn?.click();
+    expect(onDownload).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
 });
 
 describe('App component', () => {
@@ -459,6 +736,8 @@ describe('App component', () => {
 
     mockCtx = {
       fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
       fillRect: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),
@@ -466,7 +745,12 @@ describe('App component', () => {
       rotate: vi.fn(),
       scale: vi.fn(),
       drawImage: vi.fn(),
-      clearRect: vi.fn()
+      clearRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn()
     };
 
     HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((contextId: string) => {
@@ -782,5 +1066,44 @@ describe('App component', () => {
     // Unit label translated
     const unitLabel = container.querySelector('label[for="dim-unit"]');
     expect(unitLabel?.textContent).toBe('Unité');
+  });
+
+  it('supports activating photo sheet (palette), updating action bar, and opening preview modal', async () => {
+    render(h(App, {}), container);
+
+    // Upload photo
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile();
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Enable sheet checkbox in settings panel
+    const sheetToggle = container.querySelector<HTMLInputElement>('input[name="palette-enabled"]');
+    expect(sheetToggle).toBeDefined();
+    sheetToggle?.click();
+    await new Promise((r) => setTimeout(r, 40));
+
+    // Action bar info should reflect the photo sheet
+    const infoDim = container.querySelector('.action-info .info-dim');
+    expect(infoDim?.textContent).toContain('10×15 cm');
+    expect(infoDim?.textContent).toContain('photos');
+
+    // Click preview button to open modal
+    const previewBtn = container.querySelector<HTMLButtonElement>('.preview-sheet-btn');
+    expect(previewBtn).toBeDefined();
+    previewBtn?.click();
+    await new Promise((r) => setTimeout(r, 40));
+
+    // Modal dialog should be rendered
+    const modal = document.querySelector('.sheet-modal');
+    expect(modal).toBeDefined();
+    expect(modal?.textContent).toContain('Aperçu de la planche photo');
+
+    // Close modal
+    const closeBtn = modal?.querySelector<HTMLButtonElement>('.sheet-modal-close');
+    closeBtn?.click();
+    await new Promise((r) => setTimeout(r, 40));
+    expect(document.querySelector('.sheet-modal')).toBeNull();
   });
 });
