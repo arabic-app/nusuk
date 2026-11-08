@@ -91,30 +91,62 @@ describe('Header component', () => {
     expect(tagline?.textContent).toContain('Recadrage');
   });
 
-  it('supports switching language between FR, AR, EN', async () => {
+  it('supports compact dropdown language selector switching between FR, AR, EN', async () => {
+    setLocale('fr');
     render(h(Header, {}), container);
-    const langBtns = container.querySelectorAll<HTMLButtonElement>('.lang-btn');
-    expect(langBtns.length).toBe(3);
+    
+    // Check compact trigger button
+    const trigger = container.querySelector<HTMLButtonElement>('.lang-dropdown-trigger');
+    expect(trigger).not.toBeNull();
+    expect(trigger?.textContent).toContain('FR');
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+
+    // Dropdown menu is not open yet
+    expect(container.querySelector('.lang-dropdown-menu')).toBeNull();
+
+    // Click trigger to open dropdown
+    trigger?.click();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+    const menu = container.querySelector('.lang-dropdown-menu');
+    expect(menu).not.toBeNull();
+
+    const items = container.querySelectorAll<HTMLButtonElement>('.lang-dropdown-item');
+    expect(items.length).toBe(3);
 
     // Switch to EN
-    const enBtn = Array.from(langBtns).find(b => b.textContent?.trim() === 'EN');
-    expect(enBtn).toBeDefined();
-    enBtn?.click();
+    const enItem = Array.from(items).find(b => b.textContent?.includes('EN') || b.textContent?.includes('English'));
+    expect(enItem).toBeDefined();
+    enItem?.click();
     await new Promise(r => setTimeout(r, 10));
 
     expect(getLocale()).toBe('en');
-    const updatedEnBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.lang-btn')).find(b => b.textContent?.trim() === 'EN');
-    expect(updatedEnBtn?.classList.contains('active')).toBe(true);
+    expect(container.querySelector('.lang-dropdown-menu')).toBeNull();
+    const updatedTriggerEn = container.querySelector<HTMLButtonElement>('.lang-dropdown-trigger');
+    expect(updatedTriggerEn?.textContent).toContain('EN');
 
-    // Switch to AR
-    const arBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.lang-btn')).find(b => b.textContent?.includes('العربية'));
-    expect(arBtn).toBeDefined();
-    arBtn?.click();
+    // Open dropdown again and switch to AR
+    updatedTriggerEn?.click();
+    await new Promise(r => setTimeout(r, 10));
+    const arItem = Array.from(container.querySelectorAll<HTMLButtonElement>('.lang-dropdown-item')).find(b => b.textContent?.includes('العربية'));
+    expect(arItem).toBeDefined();
+    arItem?.click();
     await new Promise(r => setTimeout(r, 10));
 
     expect(getLocale()).toBe('ar');
-    const updatedArBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.lang-btn')).find(b => b.textContent?.includes('العربية'));
-    expect(updatedArBtn?.classList.contains('active')).toBe(true);
+    expect(container.querySelector('.lang-dropdown-menu')).toBeNull();
+    const updatedTriggerAr = container.querySelector<HTMLButtonElement>('.lang-dropdown-trigger');
+    expect(updatedTriggerAr?.textContent).toContain('AR');
+
+    // Test closing via Escape key
+    updatedTriggerAr?.click();
+    await new Promise(r => setTimeout(r, 10));
+    expect(container.querySelector('.lang-dropdown-menu')).not.toBeNull();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await new Promise(r => setTimeout(r, 10));
+    expect(container.querySelector('.lang-dropdown-menu')).toBeNull();
   });
 
   it('toggles theme between light and dark', async () => {
@@ -902,9 +934,9 @@ describe('App component', () => {
     const menu = container.querySelector('.toolbar-dropdown-menu');
     expect(menu).not.toBeNull();
 
-    // Menu contains Cadrer visage, Centrer, Ajuster, Remplir, Miroir
+    // Menu contains Centrer, Ajuster, Remplir, Miroir
     const menuItems = container.querySelectorAll('.toolbar-menu-item');
-    expect(menuItems.length).toBe(5);
+    expect(menuItems.length).toBe(4);
 
     // Escape key closes the menu
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

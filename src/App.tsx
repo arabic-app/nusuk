@@ -256,17 +256,6 @@ export function App() {
     }
   };
 
-  const handleAutoFrameFace = async () => {
-    if (!activeBitmap) return;
-    try {
-      const faceBox = await detectFace(activeBitmap);
-      const framing = computeFaceFraming(cropW, cropH, activeBitmap.width, activeBitmap.height, faceBox);
-      updateTransform(framing);
-    } catch {
-      updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
-    }
-  };
-
   const handleResetTransform = () => {
     if (initialTransformRef.current) {
       updateTransform(initialTransformRef.current);
@@ -398,18 +387,6 @@ export function App() {
 
                     {showMoreTools && (
                       <div class="toolbar-dropdown-menu" role="menu">
-                        <button
-                          type="button"
-                          class="toolbar-menu-item"
-                          role="menuitem"
-                          onClick={() => {
-                            handleAutoFrameFace();
-                            setShowMoreTools(false);
-                          }}
-                        >
-                          <IconFaceGuide size={16} />
-                          <span>{t('controls.frame_face')}</span>
-                        </button>
                         <button
                           type="button"
                           class="toolbar-menu-item"

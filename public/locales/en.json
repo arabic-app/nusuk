@@ -17,7 +17,6 @@
   "controls.reset": "Reset",
   "controls.change_photo": "Change photo",
   "controls.oval_guide": "Face guide",
-  "controls.frame_face": "Frame face",
   "controls.more_tools": "More tools",
   "controls.empty_warning": "Empty areas will be filled with pure white",
   "size.title": "Output dimensions",
