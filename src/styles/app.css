@@ -906,12 +906,17 @@
 }
 
 .sheet-modal-specs {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
 }
 
 .sheet-modal-footer {
@@ -919,9 +924,62 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 16px 24px;
   border-top: 1px solid var(--border-color);
   background: var(--bg-surface);
+}
+
+.sheet-modal-footer .btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sheet-modal-footer .sheet-btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.sheet-modal-footer .sheet-btn-secondary:hover {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+
+.sheet-modal-footer .sheet-btn-download {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 108, 53, 0.25);
+  gap: 8px;
+}
+
+.sheet-modal-footer .sheet-btn-download:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 14px rgba(0, 108, 53, 0.35);
+  transform: translateY(-1px);
+}
+
+.sheet-modal-footer .sheet-btn-download:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+[data-theme="dark"] .sheet-modal-footer .sheet-btn-download {
+  color: #0C1511;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(61, 190, 122, 0.3);
+}
+
+[data-theme="dark"] .sheet-modal-footer .sheet-btn-download:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(61, 190, 122, 0.4);
+}
+
+[data-theme="dark"] .sheet-modal-footer .sheet-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 @keyframes fadeIn {
@@ -962,6 +1020,16 @@
   }
 
   .download-btn {
+    width: 100%;
+  }
+
+  .sheet-modal-footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .sheet-modal-footer .btn {
     width: 100%;
   }
 }

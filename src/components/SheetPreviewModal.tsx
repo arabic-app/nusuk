@@ -152,20 +152,20 @@ export function SheetPreviewModal({
         <div class="sheet-modal-footer">
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-secondary sheet-btn-secondary"
             onClick={onClose}
           >
             {t('palette.close')}
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-primary sheet-btn-download"
             onClick={() => {
               onDownload();
               onClose();
             }}
           >
-            <IconDownload size={16} />
+            <IconDownload size={18} />
             <span>{t('palette.download_btn')}</span>
           </button>
         </div>
