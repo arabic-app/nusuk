@@ -238,6 +238,16 @@ export function IconKaaba({ size = 28, class: cls = '', strokeWidth = 1.75 }: Ic
   );
 }
 
+export function IconPortrait({ size = 28, class: cls = '', strokeWidth = 1.75 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls} aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="4" fill="var(--primary-soft)" />
+      <circle cx="12" cy="10" r="3.25" stroke="currentColor" />
+      <path d="M6.5 18.5c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke="currentColor" />
+    </svg>
+  );
+}
+
 export function IconCamera({ size = 18, class: cls = '', strokeWidth = 2 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls} aria-hidden="true">

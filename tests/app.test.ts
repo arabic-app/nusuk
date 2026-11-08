@@ -12,6 +12,7 @@ import { PRESETS, createDefaultSheetConfig } from '../src/utils/dimensions';
 import { createDefaultTransform } from '../src/utils/transform';
 import { setLocale, getLocale, t } from '../src/utils/i18n';
 import { setTheme, getStoredTheme } from '../src/utils/theme';
+import { setBrand } from '../src/utils/brand';
 
 if (!globalThis.localStorage || typeof globalThis.localStorage.clear !== 'function') {
   const store = new Map<string, string>();
@@ -74,6 +75,7 @@ describe('Header component', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    setBrand('nusuk');
     setLocale('fr');
     setTheme('light');
   });
@@ -204,6 +206,7 @@ describe('ActionBar component', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    setBrand('nusuk');
     setLocale('fr');
   });
 
@@ -315,6 +318,7 @@ describe('SettingsPanel component', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    setBrand('nusuk');
     setLocale('fr');
   });
 
@@ -683,6 +687,7 @@ describe('SheetPreviewModal component', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    setBrand('nusuk');
     setLocale('fr');
   });
 
@@ -802,6 +807,7 @@ describe('App component', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    setBrand('nusuk');
     setLocale('fr');
 
     mockCtx = {

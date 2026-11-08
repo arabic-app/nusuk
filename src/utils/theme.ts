@@ -1,3 +1,5 @@
+import { getBrand } from './brand';
+
 export type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'nusuk_photo_theme';
 
@@ -51,6 +53,16 @@ export function setTheme(theme: Theme): void {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme;
+    const brand = getBrand();
+    document.documentElement.setAttribute('data-brand', brand === 'nusuk' ? 'nusuk' : 'azure');
+    const metaColor = document.querySelector('meta[name="theme-color"]');
+    if (metaColor) {
+      if (brand === 'nusuk') {
+        metaColor.setAttribute('content', theme === 'dark' ? '#0C1511' : '#006C35');
+      } else {
+        metaColor.setAttribute('content', theme === 'dark' ? '#0B132B' : '#0284C7');
+      }
+    }
   }
   themeListeners.forEach((cb) => {
     try {

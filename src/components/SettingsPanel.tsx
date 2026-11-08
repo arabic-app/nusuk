@@ -4,6 +4,7 @@ import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../util
 import { calculateSheetLayout } from '../utils/sheetTiling';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
 import { isPhotoSheetEnabled } from '../utils/features';
+import { Brand, getBrand } from '../utils/brand';
 import { t } from '../utils/i18n';
 import {
   IconRuler,
@@ -35,6 +36,7 @@ export interface SettingsPanelProps {
   onSheetConfigChange?: (cfg: SheetConfig) => void;
   onOpenSheetPreview?: () => void;
   showPhotoSheet?: boolean;
+  brand?: Brand;
 }
 
 export function SettingsPanel({
@@ -54,8 +56,11 @@ export function SettingsPanel({
   sheetConfig,
   onSheetConfigChange,
   onOpenSheetPreview,
-  showPhotoSheet = isPhotoSheetEnabled()
+  showPhotoSheet = isPhotoSheetEnabled(),
+  brand = getBrand()
 }: SettingsPanelProps) {
+  const isNusuk = brand === 'nusuk';
+
   const isNusukPreset =
     dimension.width === PRESETS.nusuk.width &&
     dimension.height === PRESETS.nusuk.height &&
@@ -65,6 +70,17 @@ export function SettingsPanel({
     dimension.width === PRESETS.nusukDoc.width &&
     dimension.height === PRESETS.nusukDoc.height &&
     dimension.unit === PRESETS.nusukDoc.unit;
+
+  const isPassportPreset =
+    dimension.width === PRESETS.passport.width &&
+    dimension.height === PRESETS.passport.height &&
+    dimension.unit === PRESETS.passport.unit;
+
+  const isIntlPreset =
+    (dimension.width === PRESETS.intl.width &&
+      dimension.height === PRESETS.intl.height &&
+      dimension.unit === PRESETS.intl.unit) ||
+    (dimension.width === 51 && dimension.height === 51 && dimension.unit === 'mm');
 
   const onWidthChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;
@@ -188,22 +204,61 @@ export function SettingsPanel({
         </h3>
 
         <div class="preset-buttons" role="group" aria-label={t('aria.size_presets')}>
-          <button
-            type="button"
-            class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => onDimensionChange(PRESETS.nusuk)}
-            title={t('size.preset_nusuk_tooltip')}
-          >
-            {t('size.preset_nusuk')}
-          </button>
-          <button
-            type="button"
-            class={`btn btn-sm ${isNusukDocPreset ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => onDimensionChange(PRESETS.nusukDoc)}
-            title={t('size.preset_nusuk_doc_tooltip')}
-          >
-            {t('size.preset_nusuk_doc')}
-          </button>
+          {isNusuk ? (
+            <>
+              <button
+                type="button"
+                class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.nusuk)}
+                title={t('size.preset_nusuk_tooltip')}
+              >
+                {t('size.preset_nusuk')}
+              </button>
+              <button
+                type="button"
+                class={`btn btn-sm ${isNusukDocPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.nusukDoc)}
+                title={t('size.preset_nusuk_doc_tooltip')}
+              >
+                {t('size.preset_nusuk_doc')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                class={`btn btn-sm ${isPassportPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.passport)}
+                title={t('size.preset_passport_tooltip')}
+              >
+                {t('size.preset_passport')}
+              </button>
+              <button
+                type="button"
+                class={`btn btn-sm ${isIntlPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.intl)}
+                title={t('size.preset_intl_tooltip')}
+              >
+                {t('size.preset_intl')}
+              </button>
+              <button
+                type="button"
+                class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.nusuk)}
+                title={t('size.preset_id_generic_tooltip')}
+              >
+                {t('size.preset_id_generic')}
+              </button>
+              <button
+                type="button"
+                class={`btn btn-sm ${isNusukDocPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.nusukDoc)}
+                title={t('size.preset_doc_generic_tooltip')}
+              >
+                {t('size.preset_doc_generic')}
+              </button>
+            </>
+          )}
         </div>
 
         <div class="custom-dim-grid">
@@ -576,7 +631,7 @@ export function SettingsPanel({
           <div class="warning-banner" role="alert">
             <p>
               <IconAlert size={16} />
-              <span>{t('export.png_warning')}</span>
+              <span>{isNusuk ? t('export.png_warning') : t('export.png_warning_portrait')}</span>
             </p>
             <button
               type="button"

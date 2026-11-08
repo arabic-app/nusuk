@@ -28,6 +28,7 @@ import { detectFace, computeFaceFraming } from './utils/faceDetection';
 import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
 import { isPhotoSheetEnabled } from './utils/features';
+import { Brand, getBrand, initBrand, subscribeBrand } from './utils/brand';
 import { t, subscribeLocale, initLocale } from './utils/i18n';
 import { initTheme } from './utils/theme';
 import './styles/theme.css';
@@ -36,11 +37,18 @@ import './styles/app.css';
 
 export function App() {
   const [, setTick] = useState(0);
+  const [brand, setBrandState] = useState<Brand>(getBrand());
 
   useEffect(() => {
+    initBrand();
     initLocale();
     initTheme();
-    return subscribeLocale(() => setTick((v) => v + 1));
+    const unsubBrand = subscribeBrand((b) => setBrandState(b));
+    const unsubLocale = subscribeLocale(() => setTick((v) => v + 1));
+    return () => {
+      unsubBrand();
+      unsubLocale();
+    };
   }, []);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,7 +56,9 @@ export function App() {
   const [processedBitmap, setProcessedBitmap] = useState<ImageBitmap | null>(null);
   const [isComparing, setIsComparing] = useState(false);
 
-  const [dimension, setDimension] = useState<OutputDimension>(PRESETS.nusuk);
+  const [dimension, setDimension] = useState<OutputDimension>(() =>
+    getBrand() === 'nusuk' ? PRESETS.nusuk : PRESETS.passport
+  );
   const [transform, setTransform] = useState<TransformState>(createDefaultTransform());
   const [showOvalGuide, setShowOvalGuide] = useState(true);
   const [showMoreTools, setShowMoreTools] = useState(false);
@@ -143,7 +153,9 @@ export function App() {
         const isLandscape = bmp.width > bmp.height;
         setShowOvalGuide(!isLandscape);
 
-        const targetDim = isLandscape ? PRESETS.nusukDoc : PRESETS.nusuk;
+        const targetDim = isLandscape
+          ? PRESETS.nusukDoc
+          : (brand === 'nusuk' ? PRESETS.nusuk : PRESETS.passport);
         setDimension(targetDim);
         const targetW = clampDimension(convertToPixels(targetDim.width, targetDim.unit, targetDim.dpi));
         const targetH = clampDimension(convertToPixels(targetDim.height, targetDim.unit, targetDim.dpi));
@@ -258,7 +270,8 @@ export function App() {
         cropW,
         cropH,
         exportConfig.format,
-        showPhotoSheet ? sheetConfig : undefined
+        showPhotoSheet ? sheetConfig : undefined,
+        brand
       );
       const url = URL.createObjectURL(encodedBlob);
       const a = document.createElement('a');
@@ -302,7 +315,7 @@ export function App() {
     setSheetConfig(createDefaultSheetConfig());
     setShowSheetPreview(false);
     setShowMoreTools(false);
-    setDimension(PRESETS.nusuk);
+    setDimension(brand === 'nusuk' ? PRESETS.nusuk : PRESETS.passport);
     setShowOvalGuide(true);
   };
 
@@ -515,6 +528,7 @@ export function App() {
               }
               onOpenSheetPreview={showPhotoSheet ? () => setShowSheetPreview(true) : undefined}
               showPhotoSheet={showPhotoSheet}
+              brand={brand}
             />
           </div>
         )}

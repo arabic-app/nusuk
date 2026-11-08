@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Locale, setLocale, getLocale, subscribeLocale, t } from '../utils/i18n';
 import { Theme, setTheme, getTheme, subscribeTheme } from '../utils/theme';
-import { IconKaaba, IconMoon, IconSun, IconGlobe, IconChevronDown, IconCheck } from './Icons';
+import { Brand, getBrand, subscribeBrand } from '../utils/brand';
+import { IconKaaba, IconPortrait, IconMoon, IconSun, IconGlobe, IconChevronDown, IconCheck } from './Icons';
 
 const LANGUAGES: { code: Locale; label: string; short: string }[] = [
   { code: 'fr', label: 'Français', short: 'FR' },
@@ -13,8 +14,15 @@ const LANGUAGES: { code: Locale; label: string; short: string }[] = [
 export function Header() {
   const [currentLocale, setCurrentLocaleState] = useState<Locale>(getLocale());
   const [theme, setThemeState] = useState<Theme>(getTheme());
+  const [brand, setBrandState] = useState<Brand>(getBrand());
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return subscribeBrand((b) => {
+      setBrandState(b);
+    });
+  }, []);
 
   useEffect(() => {
     return subscribeLocale((l) => {
@@ -65,16 +73,19 @@ export function Header() {
   };
 
   const currentLang = LANGUAGES.find((l) => l.code === currentLocale) || LANGUAGES[0];
+  const isNusuk = brand === 'nusuk';
+  const appTitle = isNusuk ? t('app.title') : t('app.title_portrait');
+  const appTagline = isNusuk ? t('app.tagline') : t('app.tagline_portrait');
 
   return (
     <header class="app-header">
       <div class="header-brand">
         <span class="brand-logo" aria-hidden="true">
-          <IconKaaba size={28} />
+          {isNusuk ? <IconKaaba size={28} /> : <IconPortrait size={28} />}
         </span>
         <div>
-          <h1 class="brand-title">{t('app.title')}</h1>
-          <p class="brand-tagline">{t('app.tagline')}</p>
+          <h1 class="brand-title">{appTitle}</h1>
+          <p class="brand-tagline">{appTagline}</p>
         </div>
       </div>
 

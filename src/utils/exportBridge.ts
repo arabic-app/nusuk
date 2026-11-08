@@ -1,4 +1,5 @@
 import { EncodedResult, ExportConfig, TransformState, SheetConfig } from '../types';
+import { Brand, getBrand } from './brand';
 import WorkerConstructor from '../workers/export.worker.ts?worker';
 
 export const MAX_NUSUK_BYTES = 1_000_000;
@@ -11,17 +12,20 @@ export function getExportFilename(
   w: number,
   h: number,
   format: string,
-  sheetConfig?: SheetConfig
+  sheetConfig?: SheetConfig,
+  brand: Brand = getBrand()
 ): string {
   const ext = format === 'image/png' ? 'png' : 'jpg';
+  const prefix = brand === 'nusuk' ? 'photo-nusuk' : 'photo-portrait';
   if (sheetConfig && sheetConfig.enabled) {
+    const sheetPrefix = brand === 'nusuk' ? 'planche-photo-nusuk' : 'planche-photo-portrait';
     const presetLabel =
       sheetConfig.preset === 'custom'
         ? `${sheetConfig.width}x${sheetConfig.height}${sheetConfig.unit}`
         : sheetConfig.preset;
-    return `planche-photo-nusuk-${presetLabel}.${ext}`;
+    return `${sheetPrefix}-${presetLabel}.${ext}`;
   }
-  return `photo-nusuk-${w}x${h}.${ext}`;
+  return `${prefix}-${w}x${h}.${ext}`;
 }
 
 let activeWorker: Worker | null = null;

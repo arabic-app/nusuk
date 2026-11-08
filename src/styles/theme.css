@@ -1,5 +1,5 @@
 /* src/styles/theme.css */
-:root {
+:root, [data-brand="nusuk"] {
   --bg-app: #F6F8F6;
   --bg-surface: #FFFFFF;
   --bg-surface-elevated: #FFFFFF;
@@ -25,7 +25,7 @@
   --shadow-lg: 0 8px 24px rgba(0, 108, 53, 0.12);
 }
 
-[data-theme="dark"] {
+[data-theme="dark"], [data-brand="nusuk"][data-theme="dark"] {
   --bg-app: #0C1511;
   --bg-surface: #14211A;
   --bg-surface-elevated: #1A2A22;
@@ -38,6 +38,43 @@
   --accent-gold: #D8B263;
   --border-color: #243629;
   --border-subtle: #1C2B21;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Theme Bleu Azur (Portrait Tools / Non-Nusuk) */
+[data-brand="azure"] {
+  --bg-app: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --primary: #0284C7; /* Bleu Azur */
+  --primary-hover: #0369A1;
+  --primary-soft: #E0F2FE;
+  --accent-gold: #0284C7;
+  --border-color: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --shadow-sm: 0 1px 3px rgba(2, 132, 199, 0.08);
+  --shadow-md: 0 4px 12px rgba(2, 132, 199, 0.10);
+  --shadow-lg: 0 8px 24px rgba(2, 132, 199, 0.14);
+}
+
+[data-brand="azure"][data-theme="dark"] {
+  --bg-app: #0B132B;
+  --bg-surface: #111D38;
+  --bg-surface-elevated: #162447;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --primary: #38BDF8; /* Azure Lumineux */
+  --primary-hover: #7DD3FC;
+  --primary-soft: #082F49;
+  --accent-gold: #38BDF8;
+  --border-color: #1E293B;
+  --border-subtle: #162447;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
