@@ -182,7 +182,7 @@ describe('Viewport and Interactive Canvas', () => {
       const svg = container.querySelector('.biometric-svg');
       expect(svg).not.toBeNull();
       expect(svg?.querySelector('.guide-head')).not.toBeNull();
-      expect(svg?.querySelector('.guide-shoulders')).not.toBeNull();
+      expect(svg?.querySelector('.guide-shoulders')).toBeNull();
       expect(svg?.querySelector('.guide-axis')).not.toBeNull();
       expect(svg?.querySelector('.guide-crown-line')).not.toBeNull();
       expect(svg?.querySelector('.guide-eye-line')).not.toBeNull();

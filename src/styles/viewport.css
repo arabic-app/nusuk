@@ -78,14 +78,6 @@
   stroke-dasharray: 6 4;
 }
 
-.biometric-svg .guide-shoulders {
-  fill: none;
-  stroke: #00D285;
-  stroke-width: 1.4;
-  stroke-dasharray: 4 4;
-  opacity: 0.8;
-}
-
 .biometric-svg .guide-axis {
   stroke: #00D285;
   stroke-width: 1.2;

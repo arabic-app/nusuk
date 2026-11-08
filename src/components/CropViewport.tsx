@@ -224,11 +224,6 @@ export function CropViewport({
   const aspectRatio = cropWidth / cropHeight;
   const faceHalfW = Math.min(38, Math.max(16, Number((21 / aspectRatio).toFixed(1))));
   const headPath = getBiometricHeadPath(faceHalfW);
-  const neckLeft = (50 - faceHalfW * 0.45).toFixed(1);
-  const neckRight = (50 + faceHalfW * 0.45).toFixed(1);
-  const shoulderLeft = (50 - faceHalfW * 1.6).toFixed(1);
-  const shoulderRight = (50 + faceHalfW * 1.6).toFixed(1);
-  const shoulderPath = `M ${neckLeft} 80 C ${(Number(neckLeft) * 0.95).toFixed(1)} 87, ${(Number(shoulderLeft) * 0.8).toFixed(1)} 94, ${shoulderLeft} 100 M ${neckRight} 80 C ${(Number(neckRight) * 1.05).toFixed(1)} 87, ${(Number(shoulderRight) * 0.8).toFixed(1)} 94, ${shoulderRight} 100`;
   const pupilLeftX = (50 - faceHalfW * 0.38).toFixed(1);
   const pupilRightX = (50 + faceHalfW * 0.38).toFixed(1);
   const crownLeftX = (50 - faceHalfW * 0.85).toFixed(1);
@@ -273,9 +268,6 @@ export function CropViewport({
             >
               {/* Vertical symmetry axis */}
               <line class="guide-axis" x1="50" y1="5" x2="50" y2="95" />
-
-              {/* Shoulders & neckline */}
-              <path class="guide-shoulders" d={shoulderPath} />
 
               {/* Anatomical head contour */}
               <path class="guide-head" d={headPath} />
