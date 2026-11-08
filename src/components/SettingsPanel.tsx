@@ -1,6 +1,6 @@
 // src/components/SettingsPanel.tsx
 import { OutputDimension, ExportConfig, Unit } from '../types';
-import { PRESETS, clampDimension } from '../utils/dimensions';
+import { PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
 import { t } from '../utils/i18n';
 
@@ -158,19 +158,34 @@ export function SettingsPanel({
             </select>
           </div>
 
-          <div class="form-group">
-            <label for="dim-dpi">{t('size.dpi')}</label>
-            <input
-              id="dim-dpi"
-              name="dim-dpi"
-              type="number"
-              min="72"
-              max="1200"
-              value={dimension.dpi}
-              onChange={(e) => onDpiChange(parseInt((e.target as HTMLInputElement).value, 10))}
-            />
-          </div>
+          {dimension.unit !== 'px' ? (
+            <div class="form-group">
+              <label for="dim-dpi">{t('size.dpi')}</label>
+              <input
+                id="dim-dpi"
+                name="dim-dpi"
+                type="number"
+                min="72"
+                max="1200"
+                value={dimension.dpi}
+                onChange={(e) => onDpiChange(parseInt((e.target as HTMLInputElement).value, 10))}
+              />
+            </div>
+          ) : (
+            <div class="form-group">
+              <label>{t('size.pixel_result') || 'Pixels'}</label>
+              <div class="computed-pixels-badge" title={t('size.pixel_result')}>
+                → {clampDimension(convertToPixels(dimension.width, dimension.unit, dimension.dpi))} × {clampDimension(convertToPixels(dimension.height, dimension.unit, dimension.dpi))} px
+              </div>
+            </div>
+          )}
         </div>
+
+        {dimension.unit !== 'px' && (
+          <div class="computed-pixels-banner">
+            → {clampDimension(convertToPixels(dimension.width, dimension.unit, dimension.dpi))} × {clampDimension(convertToPixels(dimension.height, dimension.unit, dimension.dpi))} px
+          </div>
+        )}
 
         <label class="checkbox-label lock-ratio-label">
           <input

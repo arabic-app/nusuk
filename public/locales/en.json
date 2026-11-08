@@ -24,6 +24,7 @@
   "size.width": "Width",
   "size.height": "Height",
   "size.lock_ratio": "Lock ratio",
+  "size.pixel_result": "Result",
   "size.dpi": "DPI",
   "bg.title": "Background",
   "bg.remove_ai": "Remove background (AI)",
