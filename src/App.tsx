@@ -17,7 +17,8 @@ import {
   IconFaceGuide,
   IconReset,
   IconChangePhoto,
-  IconAlert
+  IconAlert,
+  IconMoreHorizontal
 } from './components/Icons';
 import { OutputDimension, TransformState, ExportConfig, SheetConfig } from './types';
 import { PRESETS, convertToPixels, clampDimension, createDefaultSheetConfig } from './utils/dimensions';
@@ -49,6 +50,8 @@ export function App() {
   const [dimension, setDimension] = useState<OutputDimension>(PRESETS.nusuk);
   const [transform, setTransform] = useState<TransformState>(createDefaultTransform());
   const [showOvalGuide, setShowOvalGuide] = useState(true);
+  const [showMoreTools, setShowMoreTools] = useState(false);
+  const moreToolsRef = useRef<HTMLDivElement | null>(null);
 
   const [bgRemovalActive, setBgRemovalActive] = useState(false);
   const [bgLoading, setBgLoading] = useState(false);
@@ -92,6 +95,27 @@ export function App() {
     bgRemovalActive && processedBitmap && !isComparing
       ? processedBitmap
       : originalBitmap;
+
+  // Handle closing more tools menu on click outside or Escape
+  useEffect(() => {
+    if (!showMoreTools) return;
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (moreToolsRef.current && !moreToolsRef.current.contains(e.target as Node)) {
+        setShowMoreTools(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowMoreTools(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showMoreTools]);
 
   // Load image bitmap when file selected and auto-crop with face detection
   useEffect(() => {
@@ -258,6 +282,7 @@ export function App() {
     setErrorMsg(null);
     setSheetConfig(createDefaultSheetConfig());
     setShowSheetPreview(false);
+    setShowMoreTools(false);
   };
 
   return (
@@ -329,44 +354,13 @@ export function App() {
                 <div class="toolbar-group">
                   <button
                     type="button"
-                    class="btn btn-tool"
-                    onClick={() => updateTransform((t) => ({ ...t, tx: 0, ty: 0 }))}
-                    title={t('controls.center')}
+                    class={`btn btn-tool ${showOvalGuide ? 'active' : ''}`}
+                    onClick={() => setShowOvalGuide((s) => !s)}
+                    title={t('controls.oval_guide')}
                   >
-                    <IconCenter size={16} />
-                    <span>{t('controls.center')}</span>
+                    <IconFaceGuide size={16} />
+                    <span>{t('controls.oval_guide')}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="btn btn-tool"
-                    onClick={() => {
-                      if (activeBitmap) {
-                        updateTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
-                      }
-                    }}
-                    title={t('controls.fit')}
-                  >
-                    <IconFit size={16} />
-                    <span>{t('controls.fit')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-tool"
-                    onClick={() => {
-                      if (activeBitmap) {
-                        updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
-                      }
-                    }}
-                    title={t('controls.fill')}
-                  >
-                    <IconFill size={16} />
-                    <span>{t('controls.fill')}</span>
-                  </button>
-                </div>
-
-                <div class="toolbar-divider" />
-
-                <div class="toolbar-group">
                   <button
                     type="button"
                     class="btn btn-tool"
@@ -376,24 +370,78 @@ export function App() {
                     <IconRotateCw size={16} />
                     <span>{t('controls.rotate')}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="btn btn-tool"
-                    onClick={() => updateTransform(toggleFlip)}
-                    title={t('controls.flip')}
-                  >
-                    <IconFlipHorizontal size={16} />
-                    <span>{t('controls.flip')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class={`btn btn-tool ${showOvalGuide ? 'active' : ''}`}
-                    onClick={() => setShowOvalGuide((s) => !s)}
-                    title={t('controls.oval_guide')}
-                  >
-                    <IconFaceGuide size={16} />
-                    <span>{t('controls.oval_guide')}</span>
-                  </button>
+
+                  {/* Actions à la demande */}
+                  <div class="toolbar-more-wrapper" ref={moreToolsRef}>
+                    <button
+                      type="button"
+                      class={`btn btn-tool toolbar-more-btn ${showMoreTools ? 'active' : ''}`}
+                      onClick={() => setShowMoreTools((s) => !s)}
+                      title={t('controls.more_tools')}
+                      aria-expanded={showMoreTools}
+                      aria-haspopup="true"
+                    >
+                      <IconMoreHorizontal size={16} />
+                      <span>{t('controls.more_tools')}</span>
+                    </button>
+
+                    {showMoreTools && (
+                      <div class="toolbar-dropdown-menu" role="menu">
+                        <button
+                          type="button"
+                          class="toolbar-menu-item"
+                          role="menuitem"
+                          onClick={() => {
+                            updateTransform((t) => ({ ...t, tx: 0, ty: 0 }));
+                            setShowMoreTools(false);
+                          }}
+                        >
+                          <IconCenter size={16} />
+                          <span>{t('controls.center')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="toolbar-menu-item"
+                          role="menuitem"
+                          onClick={() => {
+                            if (activeBitmap) {
+                              updateTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                            }
+                            setShowMoreTools(false);
+                          }}
+                        >
+                          <IconFit size={16} />
+                          <span>{t('controls.fit')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="toolbar-menu-item"
+                          role="menuitem"
+                          onClick={() => {
+                            if (activeBitmap) {
+                              updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                            }
+                            setShowMoreTools(false);
+                          }}
+                        >
+                          <IconFill size={16} />
+                          <span>{t('controls.fill')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="toolbar-menu-item"
+                          role="menuitem"
+                          onClick={() => {
+                            updateTransform(toggleFlip);
+                            setShowMoreTools(false);
+                          }}
+                        >
+                          <IconFlipHorizontal size={16} />
+                          <span>{t('controls.flip')}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div class="toolbar-divider" />

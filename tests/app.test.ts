@@ -856,8 +856,14 @@ describe('App component', () => {
     expect(rotateBtn).toBeDefined();
     rotateBtn?.click();
 
-    // Flip button
-    const flipBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
+    // More tools dropdown button (displays on-demand actions: Flip, Center, Fit, Fill)
+    const moreBtn = container.querySelector<HTMLButtonElement>('.toolbar-more-btn');
+    expect(moreBtn).toBeDefined();
+    moreBtn?.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Flip button inside on-demand menu
+    const flipBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.toolbar-menu-item')).find((b) =>
       b.textContent?.includes(t('controls.flip'))
     );
     expect(flipBtn).toBeDefined();
@@ -872,6 +878,38 @@ describe('App component', () => {
     ovalBtn?.click();
     await new Promise((r) => setTimeout(r, 20));
     expect(ovalBtn?.classList.contains('active')).toBe(false);
+  });
+
+  it('manages on-demand tools menu: opens, executes tool, and closes on Escape', async () => {
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile();
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // By default, on-demand dropdown is not rendered
+    expect(container.querySelector('.toolbar-dropdown-menu')).toBeNull();
+
+    // Click "Autres outils" button to open menu
+    const moreBtn = container.querySelector<HTMLButtonElement>('.toolbar-more-btn');
+    expect(moreBtn).not.toBeNull();
+    moreBtn?.click();
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Menu should now be open
+    const menu = container.querySelector('.toolbar-dropdown-menu');
+    expect(menu).not.toBeNull();
+
+    // Menu contains Centrer, Ajuster, Remplir, Miroir
+    const menuItems = container.querySelectorAll('.toolbar-menu-item');
+    expect(menuItems.length).toBe(4);
+
+    // Escape key closes the menu
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(container.querySelector('.toolbar-dropdown-menu')).toBeNull();
   });
 
   it('releases GPU textures via bitmap.close() on reset and image replacement', async () => {

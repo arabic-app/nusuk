@@ -286,3 +286,13 @@ export function IconScissors({ size = 16, class: cls = '', strokeWidth = 2 }: Ic
     </svg>
   );
 }
+
+export function IconMoreHorizontal({ size = 16, class: cls = '', strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls} aria-hidden="true">
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
