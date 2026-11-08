@@ -61,13 +61,7 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: [
-        'anti-fouc.js',
-        'locales/*.json',
-        'icons/*.png',
-        'models/**/*.{json,onnx}',
-        'vendor/ort/*.{wasm,mjs,js}'
-      ],
+      includeAssets: ['anti-fouc.js'],
       manifest: {
         id: '/',
         name: 'Nusuk Photo — Recadrage photo Hajj & Omra',
@@ -76,6 +70,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        orientation: 'any',
+        categories: ['productivity', 'utilities', 'photo'],
         theme_color: '#006C35',
         background_color: '#F6F8F6',
         icons: [
@@ -104,6 +100,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,wasm,onnx}'],
+        globIgnores: ['**/assets/*.wasm'],
         maximumFileSizeToCacheInBytes: 35 * 1024 * 1024,
         runtimeCaching: [
           {
