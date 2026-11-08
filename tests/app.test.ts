@@ -352,7 +352,7 @@ describe('SettingsPanel component', () => {
 
     const docBtn = Array.from(presetBtns).find(b => b.textContent?.includes('1100'));
     expect(docBtn?.textContent).toContain('1100 x 825 (Nusuk Document)');
-    expect(docBtn?.title).toBe("Document sur Nusuk: passeport, carté séjour ...");
+    expect(docBtn?.title).toBe("Document sur Nusuk: passeport, carte de séjour ...");
     expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
 
     // Click document preset
