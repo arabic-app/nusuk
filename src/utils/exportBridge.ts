@@ -1,0 +1,94 @@
+import { EncodedResult, ExportConfig, TransformState } from '../types';
+import WorkerConstructor from '../workers/export.worker.ts?worker';
+
+export const MAX_NUSUK_BYTES = 1_000_000;
+
+export function formatFileSize(bytes: number): string {
+  return (bytes / 1000).toFixed(0);
+}
+
+let activeWorker: Worker | null = null;
+let currentRequestId = 0;
+
+export function getExportWorker(): Worker {
+  if (!activeWorker) {
+    activeWorker = new WorkerConstructor();
+  }
+  return activeWorker;
+}
+
+export function terminateExportWorker(): void {
+  if (activeWorker) {
+    activeWorker.terminate();
+    activeWorker = null;
+  }
+}
+
+export function setExportWorker(worker: Worker | null): void {
+  if (activeWorker && activeWorker !== worker) {
+    activeWorker.terminate();
+  }
+  activeWorker = worker;
+}
+
+export function renderAndEncode(
+  bitmap: ImageBitmap,
+  cropWidth: number,
+  cropHeight: number,
+  transform: TransformState,
+  config: ExportConfig,
+  signal?: AbortSignal
+): Promise<EncodedResult> {
+  if (signal?.aborted) {
+    return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+  }
+
+  return new Promise<EncodedResult>((resolve, reject) => {
+    const worker = getExportWorker();
+    const id = ++currentRequestId;
+
+    const cleanup = () => {
+      worker.removeEventListener('message', handler);
+      if (signal) {
+        signal.removeEventListener('abort', onAbort);
+      }
+    };
+
+    const onAbort = () => {
+      cleanup();
+      try {
+        worker.postMessage({ id, type: 'cancel' });
+      } catch {
+        // Worker might already be terminated
+      }
+      reject(new DOMException('The operation was aborted', 'AbortError'));
+    };
+
+    const handler = (e: MessageEvent) => {
+      if (e.data && e.data.id === id) {
+        cleanup();
+        resolve({
+          blob: e.data.blob,
+          width: e.data.width,
+          height: e.data.height,
+          bytes: e.data.bytes,
+          adjustedQuality: e.data.adjustedQuality
+        });
+      }
+    };
+
+    if (signal) {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    worker.addEventListener('message', handler);
+    worker.postMessage({
+      id,
+      bitmap,
+      cropWidth,
+      cropHeight,
+      transform,
+      config
+    });
+  });
+}
