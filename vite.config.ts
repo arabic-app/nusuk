@@ -1,5 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import preact from '@preact/preset-vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,7 +56,98 @@ function servePublicOrtPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [servePublicOrtPlugin(), preact()],
+  plugins: [
+    servePublicOrtPlugin(),
+    preact(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'anti-fouc.js',
+        'locales/*.json',
+        'icons/*.png',
+        'models/**/*.{json,onnx}',
+        'vendor/ort/*.{wasm,mjs,js}'
+      ],
+      manifest: {
+        id: '/',
+        name: 'Nusuk Photo — Recadrage photo Hajj & Omra',
+        short_name: 'Nusuk Photo',
+        description: "Recadrage et mise en conformité de photos d'identité pour le portail Hajj Nusuk (480x640, fond blanc, < 1 Mo).",
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        theme_color: '#006C35',
+        background_color: '#F6F8F6',
+        icons: [
+          {
+            src: '/icons/pwa-64x64.png',
+            sizes: '64x64',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,wasm,onnx}'],
+        maximumFileSizeToCacheInBytes: 35 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/models/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'nusuk-models-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/vendor/ort/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'nusuk-ort-wasm-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/locales/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'nusuk-locales-cache',
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      }
+    })
+  ],
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
