@@ -1,0 +1,94 @@
+/* src/styles/viewport.css */
+.crop-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #050a08;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  outline: none;
+  border-radius: var(--radius-md);
+}
+
+.crop-viewport:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary);
+}
+
+.crop-frame-wrapper {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55), 0 0 15px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+}
+
+.crop-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.biometric-oval {
+  position: absolute;
+  top: 10%;
+  bottom: 12%;
+  left: 20%;
+  right: 20%;
+  border: 2px dashed rgba(255, 255, 255, 0.7);
+  border-radius: 50% / 55%;
+  pointer-events: none;
+}
+
+.eye-level-line {
+  position: absolute;
+  top: 42%;
+  left: 10%;
+  right: 10%;
+  border-top: 1px dotted rgba(255, 255, 255, 0.6);
+}
+
+.thirds-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.grid-line {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.grid-line.horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.grid-line.horizontal.h1 { top: 33.33%; }
+.grid-line.horizontal.h2 { top: 66.66%; }
+
+.grid-line.vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.grid-line.vertical.v1 { left: 33.33%; }
+.grid-line.vertical.v2 { left: 66.66%; }
+
+.empty-warning-badge {
+  position: absolute;
+  bottom: 16px;
+  background-color: rgba(20, 33, 26, 0.85);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
