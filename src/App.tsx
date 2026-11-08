@@ -39,7 +39,7 @@ export function App() {
   const [featherRadius, setFeatherRadius] = useState(0);
 
   const [exportConfig, setExportConfig] = useState<ExportConfig>({
-    format: 'image/jpeg',
+    format: 'image/png',
     quality: 0.95,
     maxBytes: MAX_NUSUK_BYTES
   });

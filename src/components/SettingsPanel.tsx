@@ -259,12 +259,12 @@ export function SettingsPanel({
             <input
               type="radio"
               name="export-fmt"
-              value="image/jpeg"
-              checked={exportConfig.format === 'image/jpeg'}
-              onChange={() => onExportConfigChange({ ...exportConfig, format: 'image/jpeg' })}
+              value="image/png"
+              checked={exportConfig.format === 'image/png'}
+              onChange={() => onExportConfigChange({ ...exportConfig, format: 'image/png' })}
             />
             <span>
-              JPG <span class="badge-rec">{t('export.recommended')}</span>
+              PNG <span class="badge-rec">{t('export.recommended')}</span>
             </span>
           </label>
 
@@ -272,11 +272,11 @@ export function SettingsPanel({
             <input
               type="radio"
               name="export-fmt"
-              value="image/png"
-              checked={exportConfig.format === 'image/png'}
-              onChange={() => onExportConfigChange({ ...exportConfig, format: 'image/png' })}
+              value="image/jpeg"
+              checked={exportConfig.format === 'image/jpeg'}
+              onChange={() => onExportConfigChange({ ...exportConfig, format: 'image/jpeg' })}
             />
-            <span>PNG</span>
+            <span>JPG</span>
           </label>
         </div>
 

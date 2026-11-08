@@ -143,8 +143,8 @@ Pour respecter le quota des déploiements Vercel Hobby :
 |         +-----------------------+                 |  [ Maintenir pour comparer ]   |
 |                                                   +--------------------------------+
 |  Contrôles rapides :                              |  CARTE 3 : EXPORT & FORMAT     |
-|  [ - ] [ Zoom: 125% ] [ + ] [ Centrer ] [ 90° ]   |  (o) JPG [Recommandé]   ( ) PNG|
-|                                                   |  Qualité auto : 0.92           |
+|  [ - ] [ Zoom: 125% ] [ + ] [ Centrer ] [ 90° ]   |  (o) PNG [Défaut]       ( ) JPG|
+|                                                   |  Qualité auto : 0.92 (JPG)      |
 +---------------------------------------------------+--------------------------------+
 |  BARRE BASSE :  480 x 640 px  |  JAUGE : [======    ] 412 Ko / 1 Mo  |  [ TÉLÉCHARGER ] |
 +------------------------------------------------------------------------------------+
@@ -245,24 +245,25 @@ Présente simultanément dans la carte « Export » et dans la barre d'action ba
 - 🟠 **Orange (800 Ko à 1000 Ko / 80 % à 100 %)** : Conforme mais proche de la limite.
 - 🔴 **Rouge (> 1000 Ko / > 100 %)** : **Non conforme**, rejet certain par le portail Nusuk.
 
-#### D. Stratégie Format JPG (Format par défaut - Badge « Recommandé »)
-- Qualité initiale fixée à **0.95** (curseur manuel disponible de 0.70 à 1.00).
-- **Ajustement automatique par dichotomie (Binary Search)** :
-  Si l'encodage à 0.95 produit un fichier $> 1\,000\,000$ octets :
-  1. Le Worker exécute une recherche dichotomique sur le paramètre de qualité JPEG entre **0.70** et **0.95** (précision : pas de 0.01, maximum 5 itérations).
-  2. Sélection de la qualité la plus haute possible garantissant $\text{Poids} \le 1\,000\,000\text{ octets}$.
-  3. Affichage d'une notification explicite : « *Qualité ajustée automatiquement à 0.88 pour respecter la limite de 1 Mo.* »
-- **Cas extrême** : Si même à la qualité minimale de 0.70 le fichier dépasse 1 Mo (cas d'une résolution personnalisée gigantesque très bruitée), un message d'aide suggère de réduire les dimensions en pixels.
-
-#### E. Stratégie Format PNG (Compression Sans Perte)
-- Format sans perte (lossless), aucun curseur de qualité.
+#### D. Stratégie Format PNG (Format par défaut - Compression Sans Perte)
+- Format par défaut garantissant une netteté maximale et sans artéfact de compression pour le visage.
+- Format sans perte (lossless), aucun curseur destructif.
 - **Règle d'or** : Ne jamais altérer ou dégrader un PNG en douce (pas de réduction forcée de palette 8-bits non sollicitée).
 - **Gestion du dépassement** :
   Si le PNG dépasse 1 000 000 octets :
   - Affichage d'un bandeau d'alerte bien visible : « *Ce fichier PNG pèse plus de 1 Mo et sera refusé par Nusuk.* »
   - Deux boutons d'action proposés :
-    - Bouton primaire d'action corrective : « **Passer en JPG (Recommandé)** ».
+    - Bouton primaire d'action corrective : « **Passer en JPG** ».
     - Bouton secondaire : « **Télécharger quand même le PNG** ».
+
+#### E. Stratégie Format JPG
+- Format alternatif avec optimisation de taille. Qualité initiale fixée à **0.95** (curseur manuel disponible de 0.70 à 1.00).
+- **Ajustement automatique par dichotomie (Binary Search)** :
+  Si l'encodage JPG dépasse $1\,000\,000$ octets :
+  1. Le Worker exécute une recherche dichotomique sur le paramètre de qualité JPEG entre **0.70** et **0.95** (précision : pas de 0.01, maximum 5 itérations).
+  2. Sélection de la qualité la plus haute possible garantissant $\text{Poids} \le 1\,000\,000\text{ octets}$.
+  3. Affichage d'une notification explicite : « *Qualité ajustée automatiquement à 0.88 pour respecter la limite de 1 Mo.* »
+- **Cas extrême** : Si même à la qualité minimale de 0.70 le fichier dépasse 1 Mo, un message d'aide suggère de réduire les dimensions en pixels.
 
 #### F. Pipeline de Rendu Haute Définition
 1. **Source HD** : Chargement direct du buffer source en pleine résolution avec orientation EXIF corrigée nativement via `createImageBitmap(source, { imageOrientation: 'from-image' })`.
