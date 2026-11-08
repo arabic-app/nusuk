@@ -902,9 +902,9 @@ describe('App component', () => {
     const menu = container.querySelector('.toolbar-dropdown-menu');
     expect(menu).not.toBeNull();
 
-    // Menu contains Centrer, Ajuster, Remplir, Miroir
+    // Menu contains Cadrer visage, Centrer, Ajuster, Remplir, Miroir
     const menuItems = container.querySelectorAll('.toolbar-menu-item');
-    expect(menuItems.length).toBe(4);
+    expect(menuItems.length).toBe(5);
 
     // Escape key closes the menu
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
