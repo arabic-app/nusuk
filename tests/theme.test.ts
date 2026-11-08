@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getStoredTheme, setTheme, initTheme } from '../src/utils/theme';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { getStoredTheme, setTheme, initTheme, getTheme, getSystemTheme, subscribeTheme } from '../src/utils/theme';
 
 if (!globalThis.localStorage || typeof globalThis.localStorage.clear !== 'function') {
   const store = new Map<string, string>();
@@ -48,9 +48,42 @@ describe('Theme manager', () => {
   it('persists and toggles theme', () => {
     setTheme('dark');
     expect(getStoredTheme()).toBe('dark');
+    expect(getTheme()).toBe('dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     setTheme('light');
     expect(getStoredTheme()).toBe('light');
+    expect(getTheme()).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('notifies subscribers on theme change', () => {
+    const spy = vi.fn();
+    const unsub = subscribeTheme(spy);
+    setTheme('dark');
+    expect(spy).toHaveBeenCalledWith('dark');
+    unsub();
+    setTheme('light');
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('detects dark system theme when no stored theme', () => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('prefers-color-scheme: dark'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+
+    expect(getSystemTheme()).toBe('dark');
+    expect(getTheme()).toBe('dark');
+
+    window.matchMedia = originalMatchMedia;
   });
 });

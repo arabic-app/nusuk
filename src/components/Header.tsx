@@ -1,7 +1,7 @@
 // src/components/Header.tsx
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Locale, setLocale, getLocale, subscribeLocale, t } from '../utils/i18n';
-import { Theme, setTheme, getStoredTheme } from '../utils/theme';
+import { Theme, setTheme, getTheme, subscribeTheme } from '../utils/theme';
 import { IconKaaba, IconMoon, IconSun, IconGlobe, IconChevronDown, IconCheck } from './Icons';
 
 const LANGUAGES: { code: Locale; label: string; short: string }[] = [
@@ -12,13 +12,19 @@ const LANGUAGES: { code: Locale; label: string; short: string }[] = [
 
 export function Header() {
   const [currentLocale, setCurrentLocaleState] = useState<Locale>(getLocale());
-  const [theme, setThemeState] = useState<Theme>(getStoredTheme() || 'light');
+  const [theme, setThemeState] = useState<Theme>(getTheme());
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return subscribeLocale((l) => {
       setCurrentLocaleState(l);
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeTheme((nextTheme) => {
+      setThemeState(nextTheme);
     });
   }, []);
 
@@ -116,7 +122,7 @@ export function Header() {
           aria-label={t('aria.theme_toggle')}
           title={t('aria.theme_toggle')}
         >
-          {theme === 'light' ? (
+          {theme === 'dark' ? (
             <IconMoon size={18} class="icon-moon" />
           ) : (
             <IconSun size={18} class="icon-sun" />

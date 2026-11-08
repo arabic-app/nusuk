@@ -1,6 +1,8 @@
 export type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'nusuk_photo_theme';
 
+const themeListeners = new Set<(theme: Theme) => void>();
+
 export function getStoredTheme(): Theme | null {
   try {
     const val = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -8,6 +10,34 @@ export function getStoredTheme(): Theme | null {
   } catch {
     return null;
   }
+}
+
+export function getSystemTheme(): Theme {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return 'light';
+}
+
+export function getTheme(): Theme {
+  const stored = getStoredTheme();
+  if (stored) return stored;
+
+  if (typeof document !== 'undefined') {
+    const docTheme = document.documentElement.getAttribute('data-theme');
+    if (docTheme === 'light' || docTheme === 'dark') {
+      return docTheme;
+    }
+  }
+
+  return getSystemTheme();
+}
+
+export function subscribeTheme(cb: (theme: Theme) => void): () => void {
+  themeListeners.add(cb);
+  return () => {
+    themeListeners.delete(cb);
+  };
 }
 
 export function setTheme(theme: Theme): void {
@@ -18,21 +48,47 @@ export function setTheme(theme: Theme): void {
   } catch {
     // Ignore storage errors in restricted contexts
   }
-  document.documentElement.setAttribute('data-theme', theme);
-  document.documentElement.style.colorScheme = theme;
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
+  }
+  themeListeners.forEach((cb) => {
+    try {
+      cb(theme);
+    } catch {
+      // Ignore listener error
+    }
+  });
 }
+
+let mediaQueryListenerAttached = false;
 
 export function initTheme(): Theme {
   const stored = getStoredTheme();
-  if (stored) {
-    setTheme(stored);
-    return stored;
+  const theme = stored || getSystemTheme();
+  setTheme(theme);
+
+  if (
+    !mediaQueryListenerAttached &&
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function'
+  ) {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => {
+      // Only auto-switch if user hasn't explicitly set a preference in storage
+      if (!getStoredTheme()) {
+        const next = e.matches ? 'dark' : 'light';
+        setTheme(next);
+      }
+    };
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', handler);
+      mediaQueryListenerAttached = true;
+    } else if (typeof mql.addListener === 'function') {
+      mql.addListener(handler);
+      mediaQueryListenerAttached = true;
+    }
   }
-  const prefersDark =
-    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false;
-  const initial: Theme = prefersDark ? 'dark' : 'light';
-  setTheme(initial);
-  return initial;
+
+  return theme;
 }

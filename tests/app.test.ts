@@ -154,19 +154,47 @@ describe('Header component', () => {
     const themeBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
     expect(themeBtn).toBeDefined();
 
-    expect(themeBtn?.querySelector('.icon-moon')).not.toBeNull();
+    // In light mode, renders sun icon (indicating light theme)
+    expect(themeBtn?.querySelector('.icon-sun')).not.toBeNull();
+    expect(themeBtn?.querySelector('.icon-moon')).toBeNull();
 
     themeBtn?.click();
     await new Promise(r => setTimeout(r, 10));
     const updatedDarkBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
-    expect(updatedDarkBtn?.querySelector('.icon-sun')).not.toBeNull();
+    // In dark mode, renders moon icon (indicating dark theme)
+    expect(updatedDarkBtn?.querySelector('.icon-moon')).not.toBeNull();
+    expect(updatedDarkBtn?.querySelector('.icon-sun')).toBeNull();
     expect(getStoredTheme()).toBe('dark');
 
     updatedDarkBtn?.click();
     await new Promise(r => setTimeout(r, 10));
     const updatedLightBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
-    expect(updatedLightBtn?.querySelector('.icon-moon')).not.toBeNull();
+    expect(updatedLightBtn?.querySelector('.icon-sun')).not.toBeNull();
+    expect(updatedLightBtn?.querySelector('.icon-moon')).toBeNull();
     expect(getStoredTheme()).toBe('light');
+  });
+
+  it('displays moon icon in dark mode when device prefers dark theme and no stored theme', async () => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('prefers-color-scheme: dark'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+
+    render(h(Header, {}), container);
+    const themeBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
+    expect(themeBtn?.querySelector('.icon-moon')).not.toBeNull();
+    expect(themeBtn?.querySelector('.icon-sun')).toBeNull();
+
+    window.matchMedia = originalMatchMedia;
   });
 });
 
