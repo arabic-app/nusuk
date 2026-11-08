@@ -7,6 +7,11 @@ export function formatFileSize(bytes: number): string {
   return (bytes / 1000).toFixed(0);
 }
 
+export function getExportFilename(w: number, h: number, format: string): string {
+  const ext = format === 'image/png' ? 'png' : 'jpg';
+  return `photo-nusuk-${w}x${h}.${ext}`;
+}
+
 let activeWorker: Worker | null = null;
 let currentRequestId = 0;
 
