@@ -11,14 +11,22 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const onSelectedRef = useRef(onImageSelected);
+  onSelectedRef.current = onImageSelected;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   const processFile = async (file: File) => {
-    const res = await validateImageFile(file);
-    if (!res.valid) {
-      onError(t(res.error || 'dropzone.error_format'));
-      return;
+    try {
+      const res = await validateImageFile(file);
+      if (!res.valid) {
+        onErrorRef.current(t(res.error || 'dropzone.error_format'));
+        return;
+      }
+      onSelectedRef.current(file);
+    } catch {
+      onErrorRef.current(t('dropzone.error_format'));
     }
-    onImageSelected(file);
   };
 
   useEffect(() => {
@@ -55,6 +63,7 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
       }}
       onClick={() => fileInputRef.current?.click()}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           fileInputRef.current?.click();
@@ -98,7 +107,11 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
         <p class="dropzone-subtitle">{t('dropzone.subtitle')}</p>
         <p class="dropzone-hint">{t('dropzone.paste_hint')}</p>
 
-        <div class="dropzone-actions" onClick={(e) => e.stopPropagation()}>
+        <div
+          class="dropzone-actions"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <button
             type="button"
             class="btn btn-secondary"

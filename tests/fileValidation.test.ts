@@ -216,16 +216,23 @@ describe('File validation', () => {
       });
     });
 
-    it('triggers input click on Enter or Space key press', () => {
+    it('triggers input click on Enter or Space key press on container only', () => {
       const onSelected = vi.fn();
       const onError = vi.fn();
 
       render(h(Dropzone, { onImageSelected: onSelected, onError }), container);
       const dropzoneEl = container.querySelector('.dropzone-container') as HTMLElement;
       const fileInput = container.querySelector('input[accept="image/jpeg,image/png,image/webp"]') as HTMLInputElement;
+      const cameraBtn = container.querySelector('.dropzone-actions button') as HTMLButtonElement;
 
       const clickSpy = vi.spyOn(fileInput, 'click');
 
+      // Keydown on camera button should NOT trigger file input click
+      const cameraKeydown = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      cameraBtn.dispatchEvent(cameraKeydown);
+      expect(clickSpy).not.toHaveBeenCalled();
+
+      // Keydown on container directly triggers file input click
       const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
       dropzoneEl.dispatchEvent(enterEvent);
       expect(clickSpy).toHaveBeenCalledTimes(1);
@@ -233,6 +240,61 @@ describe('File validation', () => {
       const spaceEvent = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
       dropzoneEl.dispatchEvent(spaceEvent);
       expect(clickSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('invokes latest callback without stale closure after props update on paste', async () => {
+      const initialSelected = vi.fn();
+      const updatedSelected = vi.fn();
+      const onError = vi.fn();
+
+      render(h(Dropzone, { onImageSelected: initialSelected, onError }), container);
+      await new Promise((r) => setTimeout(r, 50));
+
+      // Re-render with new callback
+      render(h(Dropzone, { onImageSelected: updatedSelected, onError }), container);
+
+      const validBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const validFile = new File([validBytes], 'clipboard2.png', { type: 'image/png' });
+
+      const pasteEvent = new Event('paste', { bubbles: true, cancelable: true }) as any;
+      pasteEvent.clipboardData = {
+        items: [
+          {
+            type: 'image/png',
+            getAsFile: () => validFile,
+          },
+        ],
+      };
+
+      window.dispatchEvent(pasteEvent);
+
+      await vi.waitFor(() => {
+        expect(updatedSelected).toHaveBeenCalledWith(validFile);
+      });
+      expect(initialSelected).not.toHaveBeenCalled();
+    });
+
+    it('handles unreadable or locked files gracefully with onError', async () => {
+      const onSelected = vi.fn();
+      const onError = vi.fn();
+
+      render(h(Dropzone, { onImageSelected: onSelected, onError }), container);
+      const dropzoneEl = container.querySelector('.dropzone-container') as HTMLElement;
+
+      const lockedFile = new File(['mock'], 'locked.jpg', { type: 'image/jpeg' });
+      vi.spyOn(lockedFile, 'slice').mockImplementation(() => {
+        throw new Error('File locked / unreadable');
+      });
+
+      const dropEvent = new Event('drop', { bubbles: true, cancelable: true }) as any;
+      dropEvent.dataTransfer = { files: [lockedFile] };
+
+      dropzoneEl.dispatchEvent(dropEvent);
+
+      await vi.waitFor(() => {
+        expect(onError).toHaveBeenCalled();
+      });
+      expect(onSelected).not.toHaveBeenCalled();
     });
 
     it('processes file selected via file input', async () => {
