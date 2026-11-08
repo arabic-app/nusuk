@@ -15,6 +15,7 @@
   "controls.rotate": "تدوير 90°",
   "controls.flip": "انعكاس",
   "controls.reset": "إعادة ضبط",
+  "controls.change_photo": "تغيير الصورة",
   "controls.oval_guide": "دليل الوجه",
   "controls.empty_warning": "المساحات الفارغة ستُملأ باللون الأبيض الناصع",
   "size.title": "أبعاد الإخراج",

@@ -15,6 +15,7 @@
   "controls.rotate": "Rotation 90°",
   "controls.flip": "Miroir",
   "controls.reset": "Réinitialiser",
+  "controls.change_photo": "Changer de photo",
   "controls.oval_guide": "Guide visage",
   "controls.empty_warning": "Les zones vides seront remplies en blanc pur",
   "size.title": "Taille de sortie",

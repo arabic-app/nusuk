@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'preact/hooks';
 import { TransformState } from '../types';
 import { t } from '../utils/i18n';
 import { hasEmptyAreas } from '../utils/transform';
+import { IconInfo } from './Icons';
 
 export interface CropViewportProps {
   imageBitmap: ImageBitmap | null;
@@ -240,7 +241,8 @@ export function CropViewport({
 
       {isEmpty && (
         <div class="empty-warning-badge" role="status">
-          ℹ️ {t('controls.empty_warning')}
+          <IconInfo size={15} />
+          <span>{t('controls.empty_warning')}</span>
         </div>
       )}
     </div>

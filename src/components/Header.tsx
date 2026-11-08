@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { Locale, setLocale, getLocale, subscribeLocale, t } from '../utils/i18n';
 import { Theme, setTheme, getStoredTheme } from '../utils/theme';
+import { IconKaaba, IconMoon, IconSun } from './Icons';
 
 export function Header() {
   const [currentLocale, setCurrentLocaleState] = useState<Locale>(getLocale());
@@ -27,7 +28,9 @@ export function Header() {
   return (
     <header class="app-header">
       <div class="header-brand">
-        <span class="brand-logo" aria-hidden="true">🕋</span>
+        <span class="brand-logo" aria-hidden="true">
+          <IconKaaba size={28} />
+        </span>
         <div>
           <h1 class="brand-title">{t('app.title')}</h1>
           <p class="brand-tagline">{t('app.tagline')}</p>
@@ -69,7 +72,11 @@ export function Header() {
           aria-label={t('aria.theme_toggle')}
           title={t('aria.theme_toggle')}
         >
-          {theme === 'light' ? '🌙' : '☀️'}
+          {theme === 'light' ? (
+            <IconMoon size={18} class="icon-moon" />
+          ) : (
+            <IconSun size={18} class="icon-sun" />
+          )}
         </button>
       </div>
     </header>

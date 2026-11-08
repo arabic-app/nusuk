@@ -1,6 +1,7 @@
 // src/components/ActionBar.tsx
 import { t } from '../utils/i18n';
 import { MAX_NUSUK_BYTES, formatFileSize } from '../utils/exportBridge';
+import { IconDownload } from './Icons';
 
 export interface ActionBarProps {
   cropWidth: number;
@@ -53,7 +54,8 @@ export function ActionBar({
         onClick={onDownload}
         disabled={disabled}
       >
-        📥 {t('export.download')}
+        <IconDownload size={18} />
+        <span>{t('export.download')}</span>
       </button>
     </footer>
   );

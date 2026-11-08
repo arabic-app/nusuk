@@ -3,6 +3,15 @@ import { OutputDimension, ExportConfig, Unit } from '../types';
 import { PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
 import { t } from '../utils/i18n';
+import {
+  IconRuler,
+  IconSparkles,
+  IconEye,
+  IconUndo,
+  IconInfo,
+  IconSave,
+  IconAlert
+} from './Icons';
 
 export interface SettingsPanelProps {
   dimension: OutputDimension;
@@ -92,7 +101,10 @@ export function SettingsPanel({
     <aside class="dashboard-settings-col" aria-label={t('aria.settings_panel')}>
       {/* Size Card */}
       <div class="settings-card">
-        <h3 class="card-title">📏 {t('size.title')}</h3>
+        <h3 class="card-title">
+          <IconRuler size={18} class="card-title-icon" />
+          <span>{t('size.title')}</span>
+        </h3>
 
         <div class="preset-buttons" role="group" aria-label={t('aria.size_presets')}>
           <button
@@ -200,7 +212,10 @@ export function SettingsPanel({
 
       {/* Background Removal Card */}
       <div class="settings-card">
-        <h3 class="card-title">✨ {t('bg.title')}</h3>
+        <h3 class="card-title">
+          <IconSparkles size={18} class="card-title-icon" />
+          <span>{t('bg.title')}</span>
+        </h3>
 
         <label class="toggle-label">
           <input
@@ -249,25 +264,33 @@ export function SettingsPanel({
                 onTouchStart={onCompareStart}
                 onTouchEnd={onCompareEnd}
               >
-                👁️ {t('bg.hold_compare')}
+                <IconEye size={16} />
+                <span>{t('bg.hold_compare')}</span>
               </button>
               <button
                 type="button"
                 class="btn btn-outline restore-btn"
                 onClick={() => onToggleBgRemoval(false)}
               >
-                ↩️ {t('bg.restore')}
+                <IconUndo size={16} />
+                <span>{t('bg.restore')}</span>
               </button>
             </div>
 
-            <p class="bg-hint">💡 {t('bg.check_contours')}</p>
+            <p class="bg-hint">
+              <IconInfo size={14} />
+              <span>{t('bg.check_contours')}</span>
+            </p>
           </div>
         )}
       </div>
 
       {/* Export Card */}
       <div class="settings-card">
-        <h3 class="card-title">💾 {t('export.title')}</h3>
+        <h3 class="card-title">
+          <IconSave size={18} class="card-title-icon" />
+          <span>{t('export.title')}</span>
+        </h3>
 
         <div class="format-toggle" role="radiogroup" aria-label={t('export.format')}>
           <label class="radio-label">
@@ -297,13 +320,17 @@ export function SettingsPanel({
 
         {exportConfig.format === 'image/jpeg' && adjustedQuality !== undefined && (
           <p class="quality-info">
-            ℹ️ {t('export.quality_adjusted', { quality: adjustedQuality.toFixed(2) })}
+            <IconInfo size={14} />
+            <span>{t('export.quality_adjusted', { quality: adjustedQuality.toFixed(2) })}</span>
           </p>
         )}
 
         {exportConfig.format === 'image/png' && encodedBytes > MAX_NUSUK_BYTES && (
           <div class="warning-banner" role="alert">
-            <p>⚠️ {t('export.png_warning')}</p>
+            <p>
+              <IconAlert size={16} />
+              <span>{t('export.png_warning')}</span>
+            </p>
             <button
               type="button"
               class="btn btn-sm btn-primary switch-btn"

@@ -8,7 +8,7 @@ import { App } from '../src/App';
 import { getExportFilename, MAX_NUSUK_BYTES } from '../src/utils/exportBridge';
 import * as exportBridge from '../src/utils/exportBridge';
 import { PRESETS } from '../src/utils/dimensions';
-import { setLocale, getLocale } from '../src/utils/i18n';
+import { setLocale, getLocale, t } from '../src/utils/i18n';
 import { setTheme, getStoredTheme } from '../src/utils/theme';
 
 if (!globalThis.localStorage || typeof globalThis.localStorage.clear !== 'function') {
@@ -105,18 +105,18 @@ describe('Header component', () => {
     const themeBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
     expect(themeBtn).toBeDefined();
 
-    expect(themeBtn?.textContent?.trim()).toBe('🌙');
+    expect(themeBtn?.querySelector('.icon-moon')).not.toBeNull();
 
     themeBtn?.click();
     await new Promise(r => setTimeout(r, 10));
     const updatedDarkBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
-    expect(updatedDarkBtn?.textContent?.trim()).toBe('☀️');
+    expect(updatedDarkBtn?.querySelector('.icon-sun')).not.toBeNull();
     expect(getStoredTheme()).toBe('dark');
 
     updatedDarkBtn?.click();
     await new Promise(r => setTimeout(r, 10));
     const updatedLightBtn = container.querySelector<HTMLButtonElement>('.theme-toggle-btn');
-    expect(updatedLightBtn?.textContent?.trim()).toBe('🌙');
+    expect(updatedLightBtn?.querySelector('.icon-moon')).not.toBeNull();
     expect(getStoredTheme()).toBe('light');
   });
 });
@@ -535,11 +535,17 @@ describe('App component', () => {
     const actionBar = container.querySelector('.app-action-bar');
     expect(actionBar).not.toBeNull();
 
-    // Test reset button
-    const resetBtn = container.querySelector<HTMLButtonElement>('.btn-danger');
+    // Test reset button: restores transform without closing the photo
+    const resetBtn = container.querySelector<HTMLButtonElement>('.btn-reset');
     expect(resetBtn).not.toBeNull();
     resetBtn?.click();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(container.querySelector('.crop-viewport')).not.toBeNull();
 
+    // Test close photo button: closes image and returns to landing dropzone
+    const closeBtn = container.querySelector<HTMLButtonElement>('.btn-close-photo');
+    expect(closeBtn).not.toBeNull();
+    closeBtn?.click();
     await new Promise((r) => setTimeout(r, 20));
 
     // Back to landing view
@@ -561,21 +567,21 @@ describe('App component', () => {
 
     // Rotate button
     const rotateBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
-      b.textContent?.includes('🔄')
+      b.textContent?.includes(t('controls.rotate'))
     );
     expect(rotateBtn).toBeDefined();
     rotateBtn?.click();
 
     // Flip button
     const flipBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
-      b.textContent?.includes('🪞')
+      b.textContent?.includes(t('controls.flip'))
     );
     expect(flipBtn).toBeDefined();
     flipBtn?.click();
 
     // Oval guide button
     const ovalBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
-      b.textContent?.includes('👤')
+      b.textContent?.includes(t('controls.oval_guide'))
     );
     expect(ovalBtn).toBeDefined();
     expect(ovalBtn?.classList.contains('active')).toBe(true);
@@ -612,9 +618,9 @@ describe('App component', () => {
     // First bitmap should have been closed
     expect(closeSpy1).toHaveBeenCalled();
 
-    // Reset application
-    const resetBtn = container.querySelector<HTMLButtonElement>('.btn-danger');
-    resetBtn?.click();
+    // Close photo and return to landing view
+    const closeBtn = container.querySelector<HTMLButtonElement>('.btn-close-photo');
+    closeBtn?.click();
     await new Promise((r) => setTimeout(r, 20));
 
     // Second bitmap should have been closed

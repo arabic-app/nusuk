@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { t } from '../utils/i18n';
 import { validateImageFile } from '../utils/fileValidation';
+import { IconImageUpload, IconCamera } from './Icons';
 
 interface DropzoneProps {
   onImageSelected: (file: File) => void;
@@ -102,7 +103,9 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
       />
 
       <div class="dropzone-content">
-        <div class="dropzone-icon">📷</div>
+        <div class="dropzone-icon">
+          <IconImageUpload size={52} class="dropzone-vector-icon" />
+        </div>
         <h2 class="dropzone-title">{t('dropzone.title')}</h2>
         <p class="dropzone-subtitle">{t('dropzone.subtitle')}</p>
         <p class="dropzone-hint">{t('dropzone.paste_hint')}</p>
@@ -117,7 +120,8 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
             class="btn btn-secondary"
             onClick={() => cameraInputRef.current?.click()}
           >
-            📸 {t('dropzone.camera')}
+            <IconCamera size={18} />
+            <span>{t('dropzone.camera')}</span>
           </button>
         </div>
       </div>

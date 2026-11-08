@@ -5,9 +5,23 @@ import { Dropzone } from './components/Dropzone';
 import { CropViewport } from './components/CropViewport';
 import { ActionBar } from './components/ActionBar';
 import { SettingsPanel } from './components/SettingsPanel';
+import {
+  IconZoomIn,
+  IconZoomOut,
+  IconCenter,
+  IconFit,
+  IconFill,
+  IconRotateCw,
+  IconFlipHorizontal,
+  IconFaceGuide,
+  IconReset,
+  IconChangePhoto,
+  IconAlert
+} from './components/Icons';
 import { OutputDimension, TransformState, ExportConfig } from './types';
 import { PRESETS, convertToPixels, clampDimension } from './utils/dimensions';
 import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransform } from './utils/transform';
+import { detectFace, computeFaceFraming } from './utils/faceDetection';
 import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
 import { t, subscribeLocale, initLocale } from './utils/i18n';
@@ -48,6 +62,7 @@ export function App() {
   const [encodedBlob, setEncodedBlob] = useState<Blob | null>(null);
   const [adjustedQuality, setAdjustedQuality] = useState<number | undefined>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const initialTransformRef = useRef<TransformState | null>(null);
 
   const updateTransform = (next: TransformState | ((prev: TransformState) => TransformState)) => {
     setEncodedBlob(null);
@@ -73,7 +88,7 @@ export function App() {
       ? processedBitmap
       : originalBitmap;
 
-  // Load image bitmap when file selected
+  // Load image bitmap when file selected and auto-crop with face detection
   useEffect(() => {
     if (!imageFile) return;
 
@@ -83,7 +98,7 @@ export function App() {
     }
 
     createImageBitmap(imageFile, { imageOrientation: 'from-image' })
-      .then((bmp) => {
+      .then(async (bmp) => {
         setOriginalBitmap((prev) => {
           prev?.close?.();
           return bmp;
@@ -93,7 +108,17 @@ export function App() {
           return null;
         });
         setBgRemovalActive(false);
-        setTransform(fillTransform(cropW, cropH, bmp.width, bmp.height));
+
+        // Pre-crop photo using intelligent face detection
+        let initialT: TransformState;
+        try {
+          const faceBox = await detectFace(bmp);
+          initialT = computeFaceFraming(cropW, cropH, bmp.width, bmp.height, faceBox);
+        } catch {
+          initialT = fillTransform(cropW, cropH, bmp.width, bmp.height);
+        }
+        initialTransformRef.current = initialT;
+        setTransform(initialT);
       })
       .catch(() => setErrorMsg(t('error.read_image')));
   }, [imageFile]);
@@ -201,7 +226,15 @@ export function App() {
     }
   };
 
-  const handleReset = () => {
+  const handleResetTransform = () => {
+    if (initialTransformRef.current) {
+      updateTransform(initialTransformRef.current);
+    } else if (activeBitmap) {
+      updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+    }
+  };
+
+  const handleClosePhoto = () => {
     setImageFile(null);
     setOriginalBitmap((prev) => {
       prev?.close?.();
@@ -211,6 +244,7 @@ export function App() {
       prev?.close?.();
       return null;
     });
+    initialTransformRef.current = null;
     setBgRemovalActive(false);
     setEncodedBlob(null);
     setEncodedBytes(0);
@@ -231,7 +265,8 @@ export function App() {
             title={t('aria.close_toast')}
             aria-label={t('aria.close_toast')}
           >
-            ⚠️ {errorMsg}
+            <IconAlert size={16} />
+            <span>{errorMsg}</span>
           </div>
         )}
 
@@ -256,83 +291,125 @@ export function App() {
               />
 
               <div class="quick-toolbar" role="toolbar" aria-label={t('aria.toolbar')}>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() =>
-                    updateTransform((t) => ({ ...t, scale: Math.max(0.1, t.scale * 0.9) }))
-                  }
-                  title={t('controls.zoom')}
-                >
-                  🔍−
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() =>
-                    updateTransform((t) => ({ ...t, scale: Math.min(10, t.scale * 1.1) }))
-                  }
-                  title={t('controls.zoom')}
-                >
-                  🔍+
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() => updateTransform((t) => ({ ...t, tx: 0, ty: 0 }))}
-                >
-                  🎯 {t('controls.center')}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() => {
-                    if (activeBitmap) {
-                      updateTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                <div class="toolbar-group">
+                  <button
+                    type="button"
+                    class="btn btn-tool btn-icon-only"
+                    onClick={() =>
+                      updateTransform((t) => ({ ...t, scale: Math.max(0.1, Number((t.scale * 0.9).toFixed(3))) }))
                     }
-                  }}
-                >
-                  📐 {t('controls.fit')}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() => {
-                    if (activeBitmap) {
-                      updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                    title={`${t('controls.zoom')} -`}
+                    aria-label={`${t('controls.zoom')} -`}
+                  >
+                    <IconZoomOut size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-tool btn-icon-only"
+                    onClick={() =>
+                      updateTransform((t) => ({ ...t, scale: Math.min(10, Number((t.scale * 1.1).toFixed(3))) }))
                     }
-                  }}
-                >
-                  🖼️ {t('controls.fill')}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() => updateTransform(rotate90)}
-                >
-                  🔄 {t('controls.rotate')}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool"
-                  onClick={() => updateTransform(toggleFlip)}
-                >
-                  🪞 {t('controls.flip')}
-                </button>
-                <button
-                  type="button"
-                  class={`btn btn-tool ${showOvalGuide ? 'active' : ''}`}
-                  onClick={() => setShowOvalGuide((s) => !s)}
-                >
-                  👤 {t('controls.oval_guide')}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-tool btn-danger"
-                  onClick={handleReset}
-                >
-                  ✕ {t('controls.reset')}
-                </button>
+                    title={`${t('controls.zoom')} +`}
+                    aria-label={`${t('controls.zoom')} +`}
+                  >
+                    <IconZoomIn size={16} />
+                  </button>
+                </div>
+
+                <div class="toolbar-divider" />
+
+                <div class="toolbar-group">
+                  <button
+                    type="button"
+                    class="btn btn-tool"
+                    onClick={() => updateTransform((t) => ({ ...t, tx: 0, ty: 0 }))}
+                    title={t('controls.center')}
+                  >
+                    <IconCenter size={16} />
+                    <span>{t('controls.center')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-tool"
+                    onClick={() => {
+                      if (activeBitmap) {
+                        updateTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                      }
+                    }}
+                    title={t('controls.fit')}
+                  >
+                    <IconFit size={16} />
+                    <span>{t('controls.fit')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-tool"
+                    onClick={() => {
+                      if (activeBitmap) {
+                        updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                      }
+                    }}
+                    title={t('controls.fill')}
+                  >
+                    <IconFill size={16} />
+                    <span>{t('controls.fill')}</span>
+                  </button>
+                </div>
+
+                <div class="toolbar-divider" />
+
+                <div class="toolbar-group">
+                  <button
+                    type="button"
+                    class="btn btn-tool"
+                    onClick={() => updateTransform(rotate90)}
+                    title={t('controls.rotate')}
+                  >
+                    <IconRotateCw size={16} />
+                    <span>{t('controls.rotate')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-tool"
+                    onClick={() => updateTransform(toggleFlip)}
+                    title={t('controls.flip')}
+                  >
+                    <IconFlipHorizontal size={16} />
+                    <span>{t('controls.flip')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class={`btn btn-tool ${showOvalGuide ? 'active' : ''}`}
+                    onClick={() => setShowOvalGuide((s) => !s)}
+                    title={t('controls.oval_guide')}
+                  >
+                    <IconFaceGuide size={16} />
+                    <span>{t('controls.oval_guide')}</span>
+                  </button>
+                </div>
+
+                <div class="toolbar-divider" />
+
+                <div class="toolbar-group">
+                  <button
+                    type="button"
+                    class="btn btn-tool btn-reset"
+                    onClick={handleResetTransform}
+                    title={t('controls.reset')}
+                  >
+                    <IconReset size={16} />
+                    <span>{t('controls.reset')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-tool btn-close-photo"
+                    onClick={handleClosePhoto}
+                    title={t('controls.change_photo')}
+                  >
+                    <IconChangePhoto size={16} />
+                    <span>{t('controls.change_photo')}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
