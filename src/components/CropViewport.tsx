@@ -1,6 +1,6 @@
 // src/components/CropViewport.tsx
 import { h } from 'preact';
-import { useRef, useEffect } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { TransformState } from '../types';
 import { t } from '../utils/i18n';
 import { hasEmptyAreas } from '../utils/transform';
@@ -25,6 +25,7 @@ export function CropViewport({
 }: CropViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDraggingState, setIsDraggingState] = useState(false);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
   const touchStartDist = useRef<number | null>(null);
@@ -65,6 +66,7 @@ export function CropViewport({
   const onPointerDown = (e: h.JSX.TargetedPointerEvent<HTMLDivElement>) => {
     if (!imageBitmap || e.button !== 0) return;
     isDragging.current = true;
+    setIsDraggingState(true);
     dragStart.current = {
       x: e.clientX,
       y: e.clientY,
@@ -94,6 +96,7 @@ export function CropViewport({
 
   const onPointerUp = (e: h.JSX.TargetedPointerEvent<HTMLDivElement>) => {
     isDragging.current = false;
+    setIsDraggingState(false);
     const target = e.currentTarget as HTMLElement | null;
     if (typeof target?.releasePointerCapture === 'function') {
       try {
@@ -106,6 +109,7 @@ export function CropViewport({
 
   const onPointerCancel = (e: h.JSX.TargetedPointerEvent<HTMLDivElement>) => {
     isDragging.current = false;
+    setIsDraggingState(false);
     const target = e.currentTarget as HTMLElement | null;
     if (typeof target?.releasePointerCapture === 'function') {
       try {
@@ -202,7 +206,7 @@ export function CropViewport({
   return (
     <div
       ref={containerRef}
-      class="crop-viewport"
+      class={`crop-viewport ${isDraggingState ? 'is-dragging' : ''}`}
       tabIndex={0}
       role="region"
       aria-label={t('app.title')}
