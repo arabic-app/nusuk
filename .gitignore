@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+dist/
+build/
+
+# SDD scratch & local metadata
+.superpowers/
+
+# System & IDE
+.DS_Store
+*.local
+.vscode/
+.idea/
