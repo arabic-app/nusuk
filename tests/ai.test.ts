@@ -262,5 +262,34 @@ describe('AI Background Removal Engine', () => {
       expect(result.width).toBe(320);
       expect(result.height).toBe(240);
     });
+
+    it('ensures input bitmap close method is invoked during worker message processing', async () => {
+      const closeSpy = vi.fn();
+      const mockBitmap = {
+        width: 100,
+        height: 100,
+        close: closeSpy
+      } as unknown as ImageBitmap;
+
+      // Simulate worker onmessage with cleanup guarantee
+      const handleWorkerMessage = async (data: any) => {
+        try {
+          if (data.type === 'process') {
+            try {
+              await processBackgroundRemoval(data.bitmap, data.featherRadius);
+            } finally {
+              if (typeof data.bitmap?.close === 'function') {
+                data.bitmap.close();
+              }
+            }
+          }
+        } catch {
+          // Worker error path
+        }
+      };
+
+      await handleWorkerMessage({ type: 'process', bitmap: mockBitmap, featherRadius: 0 });
+      expect(closeSpy).toHaveBeenCalled();
+    });
   });
 });

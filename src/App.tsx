@@ -6,7 +6,7 @@ import { CropViewport } from './components/CropViewport';
 import { ActionBar } from './components/ActionBar';
 import { SettingsPanel } from './components/SettingsPanel';
 import { OutputDimension, TransformState, ExportConfig } from './types';
-import { PRESETS, convertToPixels } from './utils/dimensions';
+import { PRESETS, convertToPixels, clampDimension } from './utils/dimensions';
 import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransform } from './utils/transform';
 import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
@@ -49,8 +49,23 @@ export function App() {
   const [adjustedQuality, setAdjustedQuality] = useState<number | undefined>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const cropW = convertToPixels(dimension.width, dimension.unit, dimension.dpi);
-  const cropH = convertToPixels(dimension.height, dimension.unit, dimension.dpi);
+  const updateTransform = (next: TransformState | ((prev: TransformState) => TransformState)) => {
+    setEncodedBlob(null);
+    setTransform(next);
+  };
+
+  const updateDimension = (d: OutputDimension) => {
+    setEncodedBlob(null);
+    setDimension(d);
+  };
+
+  const updateExportConfig = (cfg: ExportConfig) => {
+    setEncodedBlob(null);
+    setExportConfig(cfg);
+  };
+
+  const cropW = clampDimension(convertToPixels(dimension.width, dimension.unit, dimension.dpi));
+  const cropH = clampDimension(convertToPixels(dimension.height, dimension.unit, dimension.dpi));
 
   // Active bitmap displayed in viewport
   const activeBitmap =
@@ -80,7 +95,7 @@ export function App() {
         setBgRemovalActive(false);
         setTransform(fillTransform(cropW, cropH, bmp.width, bmp.height));
       })
-      .catch(() => setErrorMsg('Erreur de lecture de la photo.'));
+      .catch(() => setErrorMsg(t('error.read_image')));
   }, [imageFile]);
 
   // Handle background removal toggle & updates
@@ -109,7 +124,7 @@ export function App() {
       });
       setBgRemovalActive(true);
     } catch {
-      setErrorMsg('Erreur lors du détourage de la photo.');
+      setErrorMsg(t('error.bg_removal'));
     } finally {
       setBgLoading(false);
     }
@@ -130,7 +145,7 @@ export function App() {
           return result;
         });
       } catch {
-        setErrorMsg('Erreur lors du lissage des contours.');
+        setErrorMsg(t('error.bg_feather'));
       }
     }, 150);
   };
@@ -139,6 +154,7 @@ export function App() {
   useEffect(() => {
     if (!activeBitmap) return;
 
+    setEncodedBlob(null);
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
@@ -155,7 +171,7 @@ export function App() {
         setAdjustedQuality(res.adjustedQuality);
       } catch (e: any) {
         if (e?.name !== 'AbortError') {
-          setErrorMsg(t('dropzone.error_format'));
+          setErrorMsg(t('error.generate_file'));
         }
       }
     }, 300);
@@ -168,17 +184,21 @@ export function App() {
 
   const handleDownload = () => {
     if (!encodedBlob) return;
-    const filename = getExportFilename(cropW, cropH, exportConfig.format);
-    const url = URL.createObjectURL(encodedBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 2000);
+    try {
+      const filename = getExportFilename(cropW, cropH, exportConfig.format);
+      const url = URL.createObjectURL(encodedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 2000);
+    } catch {
+      setErrorMsg(t('error.generate_file'));
+    }
   };
 
   const handleReset = () => {
@@ -208,7 +228,8 @@ export function App() {
             class="toast-error"
             role="alert"
             onClick={() => setErrorMsg(null)}
-            title="Cliquer pour fermer"
+            title={t('aria.close_toast')}
+            aria-label={t('aria.close_toast')}
           >
             ⚠️ {errorMsg}
           </div>
@@ -231,15 +252,15 @@ export function App() {
                 cropHeight={cropH}
                 transform={transform}
                 showOvalGuide={showOvalGuide}
-                onTransformChange={setTransform}
+                onTransformChange={updateTransform}
               />
 
-              <div class="quick-toolbar" role="toolbar" aria-label="Outils de cadrage">
+              <div class="quick-toolbar" role="toolbar" aria-label={t('aria.toolbar')}>
                 <button
                   type="button"
                   class="btn btn-tool"
                   onClick={() =>
-                    setTransform((t) => ({ ...t, scale: Math.max(0.1, t.scale * 0.9) }))
+                    updateTransform((t) => ({ ...t, scale: Math.max(0.1, t.scale * 0.9) }))
                   }
                   title={t('controls.zoom')}
                 >
@@ -249,7 +270,7 @@ export function App() {
                   type="button"
                   class="btn btn-tool"
                   onClick={() =>
-                    setTransform((t) => ({ ...t, scale: Math.min(10, t.scale * 1.1) }))
+                    updateTransform((t) => ({ ...t, scale: Math.min(10, t.scale * 1.1) }))
                   }
                   title={t('controls.zoom')}
                 >
@@ -258,7 +279,7 @@ export function App() {
                 <button
                   type="button"
                   class="btn btn-tool"
-                  onClick={() => setTransform((t) => ({ ...t, tx: 0, ty: 0 }))}
+                  onClick={() => updateTransform((t) => ({ ...t, tx: 0, ty: 0 }))}
                 >
                   🎯 {t('controls.center')}
                 </button>
@@ -267,7 +288,7 @@ export function App() {
                   class="btn btn-tool"
                   onClick={() => {
                     if (activeBitmap) {
-                      setTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                      updateTransform(fitTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
                     }
                   }}
                 >
@@ -278,7 +299,7 @@ export function App() {
                   class="btn btn-tool"
                   onClick={() => {
                     if (activeBitmap) {
-                      setTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
+                      updateTransform(fillTransform(cropW, cropH, activeBitmap.width, activeBitmap.height));
                     }
                   }}
                 >
@@ -287,14 +308,14 @@ export function App() {
                 <button
                   type="button"
                   class="btn btn-tool"
-                  onClick={() => setTransform(rotate90)}
+                  onClick={() => updateTransform(rotate90)}
                 >
                   🔄 {t('controls.rotate')}
                 </button>
                 <button
                   type="button"
                   class="btn btn-tool"
-                  onClick={() => setTransform(toggleFlip)}
+                  onClick={() => updateTransform(toggleFlip)}
                 >
                   🪞 {t('controls.flip')}
                 </button>
@@ -317,9 +338,9 @@ export function App() {
 
             <SettingsPanel
               dimension={dimension}
-              onDimensionChange={setDimension}
+              onDimensionChange={updateDimension}
               exportConfig={exportConfig}
-              onExportConfigChange={setExportConfig}
+              onExportConfigChange={updateExportConfig}
               encodedBytes={encodedBytes}
               adjustedQuality={adjustedQuality}
               bgRemovalActive={bgRemovalActive}

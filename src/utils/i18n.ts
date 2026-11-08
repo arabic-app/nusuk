@@ -80,7 +80,7 @@ export function t(key: string, params?: Record<string, string | number>): string
   let str = translations[currentLocale]?.[key] || translations['en']?.[key] || key;
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
-      str = str.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+      str = str.replaceAll(`{{${k}}}`, String(v));
     });
   }
   return str;

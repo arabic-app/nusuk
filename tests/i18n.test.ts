@@ -54,9 +54,10 @@ describe('i18n engine', () => {
     expect(t('app.title')).toBe('نسك فوتو');
   });
 
-  it('supports interpolation in strings', async () => {
+  it('supports interpolation in strings safely without regex injection bugs', async () => {
     await setLocale('fr');
     expect(t('export.quality_adjusted', { quality: '0.88' })).toContain('0.88');
+    expect(t('weight.gauge', { size: '100$' })).toContain('100$');
   });
 
   it('notifies subscribers on locale change', async () => {

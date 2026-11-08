@@ -1,6 +1,6 @@
 // src/components/SettingsPanel.tsx
 import { OutputDimension, ExportConfig, Unit } from '../types';
-import { PRESETS } from '../utils/dimensions';
+import { PRESETS, clampDimension } from '../utils/dimensions';
 import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
 import { t } from '../utils/i18n';
 
@@ -53,23 +53,25 @@ export function SettingsPanel({
 
   const onWidthChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;
+    const clampedVal = dimension.unit === 'px' ? clampDimension(val) : val;
     if (dimension.lockRatio && dimension.width > 0) {
-      const ratio = val / dimension.width;
-      const newHeight = dimension.unit === 'px' ? Math.round(dimension.height * ratio) : Number((dimension.height * ratio).toFixed(1));
-      onDimensionChange({ ...dimension, width: val, height: newHeight });
+      const ratio = clampedVal / dimension.width;
+      const newHeight = dimension.unit === 'px' ? clampDimension(Math.round(dimension.height * ratio)) : Number((dimension.height * ratio).toFixed(1));
+      onDimensionChange({ ...dimension, width: clampedVal, height: newHeight });
     } else {
-      onDimensionChange({ ...dimension, width: val });
+      onDimensionChange({ ...dimension, width: clampedVal });
     }
   };
 
   const onHeightChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;
+    const clampedVal = dimension.unit === 'px' ? clampDimension(val) : val;
     if (dimension.lockRatio && dimension.height > 0) {
-      const ratio = val / dimension.height;
-      const newWidth = dimension.unit === 'px' ? Math.round(dimension.width * ratio) : Number((dimension.width * ratio).toFixed(1));
-      onDimensionChange({ ...dimension, width: newWidth, height: val });
+      const ratio = clampedVal / dimension.height;
+      const newWidth = dimension.unit === 'px' ? clampDimension(Math.round(dimension.width * ratio)) : Number((dimension.width * ratio).toFixed(1));
+      onDimensionChange({ ...dimension, width: newWidth, height: clampedVal });
     } else {
-      onDimensionChange({ ...dimension, height: val });
+      onDimensionChange({ ...dimension, height: clampedVal });
     }
   };
 
@@ -87,12 +89,12 @@ export function SettingsPanel({
   };
 
   return (
-    <aside class="dashboard-settings-col" aria-label="Paramètres de retouche">
+    <aside class="dashboard-settings-col" aria-label={t('aria.settings_panel')}>
       {/* Size Card */}
       <div class="settings-card">
         <h3 class="card-title">📏 {t('size.title')}</h3>
 
-        <div class="preset-buttons" role="group" aria-label="Préréglages de taille">
+        <div class="preset-buttons" role="group" aria-label={t('aria.size_presets')}>
           <button
             type="button"
             class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
@@ -142,7 +144,7 @@ export function SettingsPanel({
           </div>
 
           <div class="form-group">
-            <label for="dim-unit">Unité</label>
+            <label for="dim-unit">{t('size.unit')}</label>
             <select
               id="dim-unit"
               name="dim-unit"

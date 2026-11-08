@@ -42,5 +42,16 @@
   "export.download_anyway": "Télécharger quand même",
   "export.download": "Télécharger la photo",
   "export.reduce_size_hint": "Veuillez réduire les dimensions en pixels pour rester sous 1 Mo",
-  "weight.gauge": "{{size}} Ko / 1 Mo"
+  "weight.gauge": "{{size}} Ko / 1 Mo",
+  "error.read_image": "Erreur de lecture de la photo",
+  "error.bg_removal": "Erreur lors du détourage de la photo",
+  "error.bg_feather": "Erreur lors du lissage des contours",
+  "error.generate_file": "Erreur lors de la génération du fichier",
+  "aria.toolbar": "Outils de cadrage",
+  "aria.close_toast": "Cliquer pour fermer",
+  "aria.settings_panel": "Paramètres de retouche",
+  "aria.size_presets": "Préréglages de taille",
+  "aria.lang_selector": "Langue",
+  "aria.theme_toggle": "Basculer le thème",
+  "size.unit": "Unité"
 }

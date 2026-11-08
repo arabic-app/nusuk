@@ -42,5 +42,16 @@
   "export.download_anyway": "Download anyway",
   "export.download": "Download photo",
   "export.reduce_size_hint": "Please reduce pixel dimensions to fit within 1 MB",
-  "weight.gauge": "{{size}} KB / 1 MB"
+  "weight.gauge": "{{size}} KB / 1 MB",
+  "error.read_image": "Error reading photo",
+  "error.bg_removal": "Error removing background",
+  "error.bg_feather": "Error smoothing edges",
+  "error.generate_file": "Error generating file",
+  "aria.toolbar": "Crop tools",
+  "aria.close_toast": "Click to close",
+  "aria.settings_panel": "Editing settings",
+  "aria.size_presets": "Size presets",
+  "aria.lang_selector": "Language",
+  "aria.theme_toggle": "Toggle theme",
+  "size.unit": "Unit"
 }

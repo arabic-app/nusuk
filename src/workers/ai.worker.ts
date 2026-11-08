@@ -65,8 +65,14 @@ if (typeof self !== 'undefined' && typeof (self as any).postMessage === 'functio
         self.postMessage({ type: 'progress', progress: 100 } satisfies AiProgressResponse);
         self.postMessage({ type: 'ready' } satisfies AiReadyResponse);
       } else if (data.type === 'process') {
-        const result = await processBackgroundRemoval(data.bitmap, data.featherRadius);
-        self.postMessage({ type: 'result', bitmap: result } satisfies AiResultResponse, [result] as any);
+        try {
+          const result = await processBackgroundRemoval(data.bitmap, data.featherRadius);
+          self.postMessage({ type: 'result', bitmap: result } satisfies AiResultResponse, [result] as any);
+        } finally {
+          if (typeof data.bitmap?.close === 'function') {
+            data.bitmap.close();
+          }
+        }
       }
     } catch (err: any) {
       self.postMessage({

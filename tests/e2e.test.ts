@@ -156,7 +156,7 @@ describe('End-to-end integration constraints', () => {
   });
 
   describe('HTML Shell & Anti-FOUC Implementation', () => {
-    it('verifies index.html has required meta tags and inline anti-FOUC script', () => {
+    it('verifies index.html has required meta tags and external anti-FOUC script reference', () => {
       const indexHtmlPath = resolve(__dirname, '../index.html');
       const html = readFileSync(indexHtmlPath, 'utf-8');
 
@@ -167,12 +167,18 @@ describe('End-to-end integration constraints', () => {
       expect(html).toContain('<div id="app"></div>');
       expect(html).toContain('src="/src/main.tsx"');
 
-      // Anti-FOUC script
-      expect(html).toContain('nusuk_photo_theme');
-      expect(html).toContain('data-theme');
-      expect(html).toContain('colorScheme');
-      expect(html).toContain('nusuk_photo_locale');
-      expect(html).toContain("locale === 'ar' ? 'rtl' : 'ltr'");
+      // CSP-compliant anti-FOUC script reference
+      expect(html).toContain('<script src="/anti-fouc.js"></script>');
+
+      // Anti-FOUC external script file verification
+      const antiFoucPath = resolve(__dirname, '../public/anti-fouc.js');
+      expect(existsSync(antiFoucPath)).toBe(true);
+      const antiFoucContent = readFileSync(antiFoucPath, 'utf-8');
+      expect(antiFoucContent).toContain('nusuk_photo_theme');
+      expect(antiFoucContent).toContain('data-theme');
+      expect(antiFoucContent).toContain('colorScheme');
+      expect(antiFoucContent).toContain('nusuk_photo_locale');
+      expect(antiFoucContent).toContain("locale === 'ar' ? 'rtl' : 'ltr'");
     });
   });
 

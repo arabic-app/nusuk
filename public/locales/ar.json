@@ -42,5 +42,16 @@
   "export.download_anyway": "تنزيل على أي حال",
   "export.download": "تنزيل الصورة",
   "export.reduce_size_hint": "يرجى تقليل الأبعاد بالبكسل للالتزام بحد 1 ميغابايت",
-  "weight.gauge": "{{size}} ك.ب / 1 م.ب"
+  "weight.gauge": "{{size}} ك.ب / 1 م.ب",
+  "error.read_image": "خطأ في قراءة الصورة",
+  "error.bg_removal": "خطأ أثناء إزالة الخلفية",
+  "error.bg_feather": "خطأ أثناء تنعيم الحواف",
+  "error.generate_file": "خطأ أثناء إنشاء الملف",
+  "aria.toolbar": "أدوات القص",
+  "aria.close_toast": "انقر للإغلاق",
+  "aria.settings_panel": "إعدادات التعديل",
+  "aria.size_presets": "أبعاد جاهزة",
+  "aria.lang_selector": "اللغة",
+  "aria.theme_toggle": "تبديل المظهر",
+  "size.unit": "الوحدة"
 }

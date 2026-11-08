@@ -300,6 +300,52 @@ describe('SettingsPanel component', () => {
     }
   });
 
+  it('clamps custom dimensions outside [50, 4000] using clampDimension', () => {
+    const onDimensionChange = vi.fn();
+    render(
+      h(SettingsPanel, {
+        dimension: { width: 640, height: 480, unit: 'px', dpi: 300, lockRatio: false },
+        onDimensionChange,
+        exportConfig: { format: 'image/jpeg', quality: 0.95, maxBytes: MAX_NUSUK_BYTES },
+        onExportConfigChange: vi.fn(),
+        encodedBytes: 400_000,
+        bgRemovalActive: false,
+        bgLoading: false,
+        featherRadius: 0,
+        onToggleBgRemoval: vi.fn(),
+        onFeatherChange: vi.fn()
+      }),
+      container
+    );
+
+    const widthInput = container.querySelector<HTMLInputElement>('input[name="dim-width"]');
+    const heightInput = container.querySelector<HTMLInputElement>('input[name="dim-height"]');
+
+    // Values below MIN_PX (50) clamp to 50
+    if (widthInput) {
+      widthInput.value = '20';
+      widthInput.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(onDimensionChange).toHaveBeenLastCalledWith(expect.objectContaining({ width: 50 }));
+    }
+
+    // Values above MAX_PX (4000) clamp to 4000
+    if (widthInput) {
+      widthInput.value = '5000';
+      widthInput.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(onDimensionChange).toHaveBeenLastCalledWith(expect.objectContaining({ width: 4000 }));
+    }
+
+    if (heightInput) {
+      heightInput.value = '10';
+      heightInput.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(onDimensionChange).toHaveBeenLastCalledWith(expect.objectContaining({ height: 50 }));
+
+      heightInput.value = '8000';
+      heightInput.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(onDimensionChange).toHaveBeenLastCalledWith(expect.objectContaining({ height: 4000 }));
+    }
+  });
+
   it('supports AI background toggle, loading state, and feather slider', () => {
     const onToggleBgRemoval = vi.fn();
     const onFeatherChange = vi.fn();
@@ -648,8 +694,87 @@ describe('App component', () => {
 
       const toastError = container.querySelector('.toast-error');
       expect(toastError).not.toBeNull();
+      expect(toastError?.textContent).toContain('Erreur lors de la génération du fichier');
     } finally {
       encodeSpy.mockRestore();
     }
+  });
+
+  it('disables download button immediately during 300ms debounce window when transform changes', async () => {
+    const encodeSpy = vi.spyOn(exportBridge, 'renderAndEncode').mockResolvedValue({
+      blob: new Blob(['mock-bytes'], { type: 'image/jpeg' }),
+      width: 640,
+      height: 480,
+      bytes: 500_000
+    });
+
+    try {
+      vi.useFakeTimers();
+      render(h(App, {}), container);
+
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      const file = createValidJpegFile();
+      Object.defineProperty(input, 'files', { value: [file], writable: true });
+      input?.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Process upload and initial encoding
+      await vi.advanceTimersByTimeAsync(80);
+      await vi.advanceTimersByTimeAsync(350);
+
+      const downloadBtn = container.querySelector<HTMLButtonElement>('.download-btn');
+      expect(downloadBtn?.disabled).toBe(false);
+
+      // Trigger transform change (e.g. rotate button in quick toolbar)
+      const rotateBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.quick-toolbar button')).find(
+        (b) => b.textContent?.includes('Rotation')
+      );
+      expect(rotateBtn).toBeDefined();
+      rotateBtn?.click();
+
+      // Wait 20ms: well within the 300ms debounce calculation window, Preact re-renders and download must be disabled
+      await vi.advanceTimersByTimeAsync(20);
+      expect(downloadBtn?.disabled).toBe(true);
+
+      // Advance remaining time (300ms): re-encoding finishes and download is enabled again
+      await vi.advanceTimersByTimeAsync(330);
+      expect(downloadBtn?.disabled).toBe(false);
+    } finally {
+      vi.useRealTimers();
+      encodeSpy.mockRestore();
+    }
+  });
+
+  it('verifies accessibility ARIA labels across App, Toolbar, SettingsPanel, and Header', async () => {
+    render(h(App, {}), container);
+
+    // Header ARIA labels
+    const langSelector = container.querySelector('.lang-selector');
+    expect(langSelector?.getAttribute('aria-label')).toBe('Langue');
+
+    const themeBtn = container.querySelector('.theme-toggle-btn');
+    expect(themeBtn?.getAttribute('aria-label')).toBe('Basculer le thème');
+
+    // Load an image
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile();
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Toolbar ARIA label
+    const toolbar = container.querySelector('.quick-toolbar');
+    expect(toolbar?.getAttribute('aria-label')).toBe('Outils de cadrage');
+
+    // Settings panel ARIA label
+    const settingsPanel = container.querySelector('.dashboard-settings-col');
+    expect(settingsPanel?.getAttribute('aria-label')).toBe('Paramètres de retouche');
+
+    // Presets group ARIA label
+    const presetGroup = container.querySelector('.preset-buttons');
+    expect(presetGroup?.getAttribute('aria-label')).toBe('Préréglages de taille');
+
+    // Unit label translated
+    const unitLabel = container.querySelector('label[for="dim-unit"]');
+    expect(unitLabel?.textContent).toBe('Unité');
   });
 });

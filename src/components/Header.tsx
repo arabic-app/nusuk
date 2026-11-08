@@ -35,7 +35,7 @@ export function Header() {
       </div>
 
       <div class="header-actions">
-        <div class="lang-selector" role="group" aria-label="Langue / Language">
+        <div class="lang-selector" role="group" aria-label={t('aria.lang_selector')}>
           <button
             type="button"
             class={`lang-btn ${currentLocale === 'fr' ? 'active' : ''}`}
@@ -66,8 +66,8 @@ export function Header() {
           type="button"
           class="theme-toggle-btn"
           onClick={toggleTheme}
-          aria-label="Basculer le thème"
-          title="Basculer le thème"
+          aria-label={t('aria.theme_toggle')}
+          title={t('aria.theme_toggle')}
         >
           {theme === 'light' ? '🌙' : '☀️'}
         </button>
