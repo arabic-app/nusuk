@@ -51,8 +51,8 @@ describe('End-to-end integration constraints', () => {
     });
 
     it('formats export filename according to Nusuk naming convention', () => {
-      expect(getExportFilename(480, 640, 'image/jpeg')).toBe('photo-nusuk-480x640.jpg');
-      expect(getExportFilename(480, 640, 'image/png')).toBe('photo-nusuk-480x640.png');
+      expect(getExportFilename(480, 640, 'image/jpeg', undefined, 'nusuk')).toBe('photo-nusuk-480x640.jpg');
+      expect(getExportFilename(480, 640, 'image/png', undefined, 'nusuk')).toBe('photo-nusuk-480x640.png');
     });
 
     it('validates image files rejecting oversized uploads (> 30MB) and non-images', async () => {

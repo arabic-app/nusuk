@@ -89,7 +89,7 @@ describe('Dimensions engine', () => {
     expect(SHEET_PRESETS['a4']).toBeDefined();
   });
 
-  it('contains Passport (35x45 mm) and Intl (2x2 in) presets', () => {
+  it('contains Passport (35x45 mm), Intl (2x2 in), Canada (50x70 mm) and Document presets', () => {
     expect(PRESETS.passport).toEqual({
       width: 35,
       height: 45,
@@ -101,6 +101,20 @@ describe('Dimensions engine', () => {
       width: 2,
       height: 2,
       unit: 'in',
+      dpi: 300,
+      lockRatio: true
+    });
+    expect(PRESETS.canada).toEqual({
+      width: 50,
+      height: 70,
+      unit: 'mm',
+      dpi: 300,
+      lockRatio: true
+    });
+    expect(PRESETS.document).toEqual({
+      width: 1100,
+      height: 825,
+      unit: 'px',
       dpi: 300,
       lockRatio: true
     });

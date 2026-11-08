@@ -40,11 +40,11 @@ export function App() {
   const [brand, setBrandState] = useState<Brand>(getBrand());
 
   useEffect(() => {
+    const unsubBrand = subscribeBrand((b) => setBrandState(b));
+    const unsubLocale = subscribeLocale(() => setTick((v) => v + 1));
     initBrand();
     initLocale();
     initTheme();
-    const unsubBrand = subscribeBrand((b) => setBrandState(b));
-    const unsubLocale = subscribeLocale(() => setTick((v) => v + 1));
     return () => {
       unsubBrand();
       unsubLocale();
@@ -154,7 +154,7 @@ export function App() {
         setShowOvalGuide(!isLandscape);
 
         const targetDim = isLandscape
-          ? PRESETS.nusukDoc
+          ? (brand === 'nusuk' ? PRESETS.nusukDoc : PRESETS.document)
           : (brand === 'nusuk' ? PRESETS.nusuk : PRESETS.passport);
         setDimension(targetDim);
         const targetW = clampDimension(convertToPixels(targetDim.width, targetDim.unit, targetDim.dpi));

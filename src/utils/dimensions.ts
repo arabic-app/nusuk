@@ -49,6 +49,20 @@ export const PRESETS: Record<string, OutputDimension> = {
     unit: 'in',
     dpi: 300,
     lockRatio: true
+  },
+  canada: {
+    width: 50,
+    height: 70,
+    unit: 'mm',
+    dpi: 300,
+    lockRatio: true
+  },
+  document: {
+    width: 1100,
+    height: 825,
+    unit: 'px',
+    dpi: 300,
+    lockRatio: true
   }
 };
 

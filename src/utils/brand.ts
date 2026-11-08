@@ -2,9 +2,6 @@
 
 export type Brand = 'nusuk' | 'portrait';
 
-let currentBrand: Brand = 'nusuk';
-const brandListeners = new Set<(brand: Brand) => void>();
-
 /**
  * Detects whether the current session is for the "nusuk" brand or "portrait" (azure) brand.
  * Only the nusuk URL (e.g. nusuk-tools.vercel.app or any domain containing 'nusuk')
@@ -14,7 +11,7 @@ const brandListeners = new Set<(brand: Brand) => void>();
  * @param customHostname Optional hostname override for testing or SSR.
  */
 export function detectBrand(customHostname?: string): Brand {
-  if (typeof window === 'undefined' && !customHostname) return 'nusuk';
+  if (typeof window === 'undefined' && !customHostname) return 'portrait';
 
   const hostname = (customHostname ?? window.location.hostname).toLowerCase();
 
@@ -37,12 +34,17 @@ export function detectBrand(customHostname?: string): Brand {
   return 'portrait';
 }
 
+let currentBrand: Brand = typeof window !== 'undefined' ? detectBrand() : 'portrait';
+let brandExplicitlySet = false;
+const brandListeners = new Set<(brand: Brand) => void>();
+
 export function getBrand(): Brand {
   return currentBrand;
 }
 
 export function setBrand(brand: Brand): void {
   currentBrand = brand;
+  brandExplicitlySet = true;
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-brand', brand === 'nusuk' ? 'nusuk' : 'azure');
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
@@ -73,7 +75,11 @@ export function subscribeBrand(cb: (brand: Brand) => void): () => void {
 }
 
 export function initBrand(customHostname?: string): Brand {
-  const brand = detectBrand(customHostname);
-  setBrand(brand);
-  return brand;
+  if (customHostname || !brandExplicitlySet) {
+    const brand = detectBrand(customHostname);
+    setBrand(brand);
+    return brand;
+  }
+  setBrand(currentBrand);
+  return currentBrand;
 }

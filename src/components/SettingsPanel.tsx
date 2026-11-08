@@ -82,6 +82,19 @@ export function SettingsPanel({
       dimension.unit === PRESETS.intl.unit) ||
     (dimension.width === 51 && dimension.height === 51 && dimension.unit === 'mm');
 
+  const isCanadaPreset =
+    dimension.width === PRESETS.canada.width &&
+    dimension.height === PRESETS.canada.height &&
+    dimension.unit === PRESETS.canada.unit;
+
+  const isDocPreset =
+    (dimension.width === PRESETS.document.width &&
+      dimension.height === PRESETS.document.height &&
+      dimension.unit === PRESETS.document.unit) ||
+    (dimension.width === PRESETS.nusukDoc.width &&
+      dimension.height === PRESETS.nusukDoc.height &&
+      dimension.unit === PRESETS.nusukDoc.unit);
+
   const onWidthChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;
     const clampedVal = dimension.unit === 'px' ? clampDimension(val) : val;
@@ -243,19 +256,19 @@ export function SettingsPanel({
               </button>
               <button
                 type="button"
-                class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => onDimensionChange(PRESETS.nusuk)}
-                title={t('size.preset_id_generic_tooltip')}
+                class={`btn btn-sm ${isCanadaPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.canada)}
+                title={t('size.preset_canada_tooltip')}
               >
-                {t('size.preset_id_generic')}
+                {t('size.preset_canada')}
               </button>
               <button
                 type="button"
-                class={`btn btn-sm ${isNusukDocPreset ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => onDimensionChange(PRESETS.nusukDoc)}
-                title={t('size.preset_doc_generic_tooltip')}
+                class={`btn btn-sm ${isDocPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => onDimensionChange(PRESETS.document)}
+                title={t('size.preset_doc_tooltip')}
               >
-                {t('size.preset_doc_generic')}
+                {t('size.preset_doc')}
               </button>
             </>
           )}

@@ -48,9 +48,9 @@ if (!globalThis.localStorage || typeof globalThis.localStorage.clear !== 'functi
 
 describe('App filename generator', () => {
   it('formats Nusuk 640x480 filename accurately', () => {
-    expect(getExportFilename(640, 480, 'image/jpeg')).toBe('photo-nusuk-640x480.jpg');
-    expect(getExportFilename(413, 531, 'image/png')).toBe('photo-nusuk-413x531.png');
-    expect(getExportFilename(600, 600, 'image/jpeg')).toBe('photo-nusuk-600x600.jpg');
+    expect(getExportFilename(640, 480, 'image/jpeg', undefined, 'nusuk')).toBe('photo-nusuk-640x480.jpg');
+    expect(getExportFilename(413, 531, 'image/png', undefined, 'nusuk')).toBe('photo-nusuk-413x531.png');
+    expect(getExportFilename(600, 600, 'image/jpeg', undefined, 'nusuk')).toBe('photo-nusuk-600x600.jpg');
 
     // Sheet filename
     const sheetCfg = {
@@ -65,7 +65,25 @@ describe('App filename generator', () => {
       spacingMm: 2,
       marginMm: 3
     };
-    expect(getExportFilename(1772, 1181, 'image/jpeg', sheetCfg)).toBe('planche-photo-nusuk-10x15.jpg');
+    expect(getExportFilename(1772, 1181, 'image/jpeg', sheetCfg, 'nusuk')).toBe('planche-photo-nusuk-10x15.jpg');
+  });
+
+  it('formats generic portrait filename accurately when brand is portrait', () => {
+    expect(getExportFilename(640, 480, 'image/jpeg', undefined, 'portrait')).toBe('photo-portrait-640x480.jpg');
+    expect(getExportFilename(413, 531, 'image/png', undefined, 'portrait')).toBe('photo-portrait-413x531.png');
+    const sheetCfg = {
+      enabled: true,
+      preset: '10x15' as const,
+      width: 15,
+      height: 10,
+      unit: 'cm' as const,
+      dpi: 300,
+      orientation: 'auto' as const,
+      cutGuides: true,
+      spacingMm: 2,
+      marginMm: 3
+    };
+    expect(getExportFilename(1772, 1181, 'image/jpeg', sheetCfg, 'portrait')).toBe('planche-photo-portrait-10x15.jpg');
   });
 });
 
@@ -1222,6 +1240,7 @@ describe('App component', () => {
   });
 
   it('disables face guide and selects 1100x825 Nusuk Document preset by default for landscape photos', async () => {
+    setBrand('nusuk');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 1200,
       height: 900,
@@ -1257,6 +1276,7 @@ describe('App component', () => {
   });
 
   it('enables face guide and selects 480x640 Nusuk Identité preset by default for portrait photos', async () => {
+    setBrand('nusuk');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 600,
       height: 800,
@@ -1289,5 +1309,79 @@ describe('App component', () => {
     const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
     expect(widthInput?.value).toBe('480');
     expect(heightInput?.value).toBe('640');
+  });
+
+  it('disables face guide and selects 1100x825 Document preset by default for landscape photos when brand is portrait', async () => {
+    setBrand('portrait');
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 1200,
+      height: 900,
+      close: vi.fn()
+    });
+
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile('landscape-doc.jpg');
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Face guide must NOT be active by default for landscape
+    const ovalBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
+      b.textContent?.includes(t('controls.oval_guide'))
+    );
+    expect(ovalBtn).toBeDefined();
+    expect(ovalBtn?.classList.contains('active')).toBe(false);
+
+    // 1100x825 (Document) must be selected by default
+    const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
+    expect(presetBtns.length).toBe(4);
+    const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
+    const passportBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('35×45'));
+    expect(docBtn?.classList.contains('btn-primary')).toBe(true);
+    expect(passportBtn?.classList.contains('btn-secondary')).toBe(true);
+
+    const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
+    const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
+    expect(widthInput?.value).toBe('1100');
+    expect(heightInput?.value).toBe('825');
+  });
+
+  it('enables face guide and selects 35x45 mm Passport preset by default for portrait photos when brand is portrait', async () => {
+    setBrand('portrait');
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 600,
+      height: 800,
+      close: vi.fn()
+    });
+
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile('portrait-id.jpg');
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Face guide MUST be active by default for portrait
+    const ovalBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
+      b.textContent?.includes(t('controls.oval_guide'))
+    );
+    expect(ovalBtn).toBeDefined();
+    expect(ovalBtn?.classList.contains('active')).toBe(true);
+
+    // 35x45 mm (Passeport / CNI) must be selected by default
+    const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
+    expect(presetBtns.length).toBe(4);
+    const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
+    const passportBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('35×45'));
+    expect(passportBtn?.classList.contains('btn-primary')).toBe(true);
+    expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
+
+    const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
+    const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
+    expect(widthInput?.value).toBe('35');
+    expect(heightInput?.value).toBe('45');
   });
 });
