@@ -108,6 +108,81 @@ export function SettingsPanel({
 
   return (
     <aside class="dashboard-settings-col" aria-label={t('aria.settings_panel')}>
+      {/* Background Removal Card */}
+      <div class="settings-card">
+        <h3 class="card-title">
+          <IconSparkles size={18} class="card-title-icon" />
+          <span>{t('bg.title')}</span>
+        </h3>
+
+        <label class="toggle-label">
+          <input
+            type="checkbox"
+            name="bg-remove"
+            checked={bgRemovalActive}
+            disabled={bgLoading}
+            onChange={(e) => onToggleBgRemoval((e.target as HTMLInputElement).checked)}
+          />
+          <span class="toggle-text">{t('bg.remove_ai')}</span>
+        </label>
+
+        {bgLoading && (
+          <div class="bg-loading-indicator" role="status">
+            <span class="spinner" aria-hidden="true" />
+            <span>{t('bg.loading_model')}</span>
+          </div>
+        )}
+
+        {bgRemovalActive && !bgLoading && (
+          <div class="bg-active-controls">
+            <div class="feather-control">
+              <div class="feather-header">
+                <label for="feather-slider">{t('bg.feather')}</label>
+                <span class="feather-val">{featherRadius.toFixed(1)} px</span>
+              </div>
+              <input
+                id="feather-slider"
+                name="feather-slider"
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+                value={featherRadius}
+                onInput={(e) => onFeatherChange(parseFloat((e.target as HTMLInputElement).value) || 0)}
+              />
+            </div>
+
+            <div class="compare-actions">
+              <button
+                type="button"
+                class="btn btn-secondary compare-btn"
+                onPointerDown={onCompareStart}
+                onPointerUp={onCompareEnd}
+                onPointerLeave={onCompareEnd}
+                onTouchStart={onCompareStart}
+                onTouchEnd={onCompareEnd}
+              >
+                <IconEye size={16} />
+                <span>{t('bg.hold_compare')}</span>
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline restore-btn"
+                onClick={() => onToggleBgRemoval(false)}
+              >
+                <IconUndo size={16} />
+                <span>{t('bg.restore')}</span>
+              </button>
+            </div>
+
+            <p class="bg-hint">
+              <IconInfo size={14} />
+              <span>{t('bg.check_contours')}</span>
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Size Card */}
       <div class="settings-card">
         <h3 class="card-title">
@@ -464,81 +539,6 @@ export function SettingsPanel({
           )}
         </div>
       )}
-
-      {/* Background Removal Card */}
-      <div class="settings-card">
-        <h3 class="card-title">
-          <IconSparkles size={18} class="card-title-icon" />
-          <span>{t('bg.title')}</span>
-        </h3>
-
-        <label class="toggle-label">
-          <input
-            type="checkbox"
-            name="bg-remove"
-            checked={bgRemovalActive}
-            disabled={bgLoading}
-            onChange={(e) => onToggleBgRemoval((e.target as HTMLInputElement).checked)}
-          />
-          <span class="toggle-text">{t('bg.remove_ai')}</span>
-        </label>
-
-        {bgLoading && (
-          <div class="bg-loading-indicator" role="status">
-            <span class="spinner" aria-hidden="true" />
-            <span>{t('bg.loading_model')}</span>
-          </div>
-        )}
-
-        {bgRemovalActive && !bgLoading && (
-          <div class="bg-active-controls">
-            <div class="feather-control">
-              <div class="feather-header">
-                <label for="feather-slider">{t('bg.feather')}</label>
-                <span class="feather-val">{featherRadius.toFixed(1)} px</span>
-              </div>
-              <input
-                id="feather-slider"
-                name="feather-slider"
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={featherRadius}
-                onInput={(e) => onFeatherChange(parseFloat((e.target as HTMLInputElement).value) || 0)}
-              />
-            </div>
-
-            <div class="compare-actions">
-              <button
-                type="button"
-                class="btn btn-secondary compare-btn"
-                onPointerDown={onCompareStart}
-                onPointerUp={onCompareEnd}
-                onPointerLeave={onCompareEnd}
-                onTouchStart={onCompareStart}
-                onTouchEnd={onCompareEnd}
-              >
-                <IconEye size={16} />
-                <span>{t('bg.hold_compare')}</span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline restore-btn"
-                onClick={() => onToggleBgRemoval(false)}
-              >
-                <IconUndo size={16} />
-                <span>{t('bg.restore')}</span>
-              </button>
-            </div>
-
-            <p class="bg-hint">
-              <IconInfo size={14} />
-              <span>{t('bg.check_contours')}</span>
-            </p>
-          </div>
-        )}
-      </div>
 
       {/* Export Card */}
       <div class="settings-card">
