@@ -10,8 +10,8 @@ export interface OutputDimension {
 
 export interface TransformState {
   scale: number;
-  tx: number; // relative normalized offset X (-1 to 1)
-  ty: number; // relative normalized offset Y (-1 to 1)
+  tx: number; // pixel offset X relative to crop center
+  ty: number; // pixel offset Y relative to crop center
   rotation: 0 | 90 | 180 | 270;
   flipX: boolean;
 }
