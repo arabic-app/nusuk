@@ -29,6 +29,13 @@ export const PRESETS: Record<string, OutputDimension> = {
     dpi: 300,
     lockRatio: true
   },
+  nusukDoc: {
+    width: 1100,
+    height: 825,
+    unit: 'px',
+    dpi: 300,
+    lockRatio: true
+  },
   passport: {
     width: 35,
     height: 45,

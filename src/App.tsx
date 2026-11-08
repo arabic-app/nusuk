@@ -138,13 +138,25 @@ export function App() {
         });
         setBgRemovalActive(false);
 
-        // Pre-crop photo using intelligent face detection
+        const isLandscape = bmp.width > bmp.height;
+        setShowOvalGuide(!isLandscape);
+
+        const targetDim = isLandscape ? PRESETS.nusukDoc : PRESETS.nusuk;
+        setDimension(targetDim);
+        const targetW = clampDimension(convertToPixels(targetDim.width, targetDim.unit, targetDim.dpi));
+        const targetH = clampDimension(convertToPixels(targetDim.height, targetDim.unit, targetDim.dpi));
+
+        // Pre-crop photo using intelligent face detection for portrait, or fill for landscape/document
         let initialT: TransformState;
         try {
-          const faceBox = await detectFace(bmp);
-          initialT = computeFaceFraming(cropW, cropH, bmp.width, bmp.height, faceBox);
+          if (!isLandscape) {
+            const faceBox = await detectFace(bmp);
+            initialT = computeFaceFraming(targetW, targetH, bmp.width, bmp.height, faceBox);
+          } else {
+            initialT = fillTransform(targetW, targetH, bmp.width, bmp.height);
+          }
         } catch {
-          initialT = fillTransform(cropW, cropH, bmp.width, bmp.height);
+          initialT = fillTransform(targetW, targetH, bmp.width, bmp.height);
         }
         initialTransformRef.current = initialT;
         setTransform(initialT);
@@ -283,6 +295,8 @@ export function App() {
     setSheetConfig(createDefaultSheetConfig());
     setShowSheetPreview(false);
     setShowMoreTools(false);
+    setDimension(PRESETS.nusuk);
+    setShowOvalGuide(true);
   };
 
   return (

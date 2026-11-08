@@ -64,6 +64,15 @@ describe('Dimensions engine', () => {
     expect(PRESETS.nusuk.lockRatio).toBe(true);
   });
 
+  it('contains Nusuk Document preset 1100x825 px', () => {
+    expect(PRESETS.nusukDoc).toBeDefined();
+    expect(PRESETS.nusukDoc.width).toBe(1100);
+    expect(PRESETS.nusukDoc.height).toBe(825);
+    expect(PRESETS.nusukDoc.unit).toBe('px');
+    expect(PRESETS.nusukDoc.dpi).toBe(300);
+    expect(PRESETS.nusukDoc.lockRatio).toBe(true);
+  });
+
   it('defines valid sheet presets and default config', () => {
     const defaultCfg = createDefaultSheetConfig();
     expect(defaultCfg.enabled).toBe(false);

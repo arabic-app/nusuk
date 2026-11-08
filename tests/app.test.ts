@@ -323,7 +323,7 @@ describe('SettingsPanel component', () => {
     container.remove();
   });
 
-  it('supports selecting dimension presets', () => {
+  it('supports selecting dimension presets with tooltips and Nusuk Document preset', () => {
     const onDimensionChange = vi.fn();
     render(
       h(SettingsPanel, {
@@ -342,12 +342,22 @@ describe('SettingsPanel component', () => {
     );
 
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    expect(presetBtns.length).toBeGreaterThanOrEqual(2);
+    // Exactly 2 presets: Nusuk Identité and Nusuk Document (the other 2 choices were deleted)
+    expect(presetBtns.length).toBe(2);
 
-    // Click passport preset
-    const passportBtn = Array.from(presetBtns).find(b => b.textContent?.includes('35×45'));
-    passportBtn?.click();
-    expect(onDimensionChange).toHaveBeenCalledWith(PRESETS.passport);
+    const idBtn = Array.from(presetBtns).find(b => b.textContent?.includes('480'));
+    expect(idBtn?.textContent).toContain('480 x 640 (Nusuk Identité)');
+    expect(idBtn?.title).toBe("Photo d'identité sur Nusuk");
+    expect(idBtn?.classList.contains('btn-primary')).toBe(true);
+
+    const docBtn = Array.from(presetBtns).find(b => b.textContent?.includes('1100'));
+    expect(docBtn?.textContent).toContain('1100 x 825 (Nusuk Document)');
+    expect(docBtn?.title).toBe("Document sur Nusuk: passeport, carté séjour ...");
+    expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
+
+    // Click document preset
+    docBtn?.click();
+    expect(onDimensionChange).toHaveBeenCalledWith(PRESETS.nusukDoc);
   });
 
   it('supports custom dimension inputs and lock ratio', () => {
@@ -821,8 +831,8 @@ describe('App component', () => {
     });
 
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
-      width: 800,
-      height: 600,
+      width: 600,
+      height: 800,
       close: vi.fn()
     });
   });
@@ -1203,5 +1213,75 @@ describe('App component', () => {
     closeBtn?.click();
     await new Promise((r) => setTimeout(r, 40));
     expect(document.querySelector('.sheet-modal')).toBeNull();
+  });
+
+  it('disables face guide and selects 1100x825 Nusuk Document preset by default for landscape photos', async () => {
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 1200,
+      height: 900,
+      close: vi.fn()
+    });
+
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile('landscape-doc.jpg');
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Face guide must NOT be active by default for landscape
+    const ovalBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
+      b.textContent?.includes(t('controls.oval_guide'))
+    );
+    expect(ovalBtn).toBeDefined();
+    expect(ovalBtn?.classList.contains('active')).toBe(false);
+
+    // 1100x825 (Nusuk Document) must be selected by default
+    const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
+    const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
+    const idBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('480'));
+    expect(docBtn?.classList.contains('btn-primary')).toBe(true);
+    expect(idBtn?.classList.contains('btn-secondary')).toBe(true);
+
+    const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
+    const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
+    expect(widthInput?.value).toBe('1100');
+    expect(heightInput?.value).toBe('825');
+  });
+
+  it('enables face guide and selects 480x640 Nusuk Identité preset by default for portrait photos', async () => {
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 600,
+      height: 800,
+      close: vi.fn()
+    });
+
+    render(h(App, {}), container);
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = createValidJpegFile('portrait-id.jpg');
+    Object.defineProperty(input, 'files', { value: [file], writable: true });
+    input?.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 80));
+
+    // Face guide MUST be active by default for portrait
+    const ovalBtn = Array.from(container.querySelectorAll<HTMLButtonElement>('.btn-tool')).find((b) =>
+      b.textContent?.includes(t('controls.oval_guide'))
+    );
+    expect(ovalBtn).toBeDefined();
+    expect(ovalBtn?.classList.contains('active')).toBe(true);
+
+    // 480x640 (Nusuk Identité) must be selected by default
+    const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
+    const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
+    const idBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('480'));
+    expect(idBtn?.classList.contains('btn-primary')).toBe(true);
+    expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
+
+    const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
+    const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
+    expect(widthInput?.value).toBe('480');
+    expect(heightInput?.value).toBe('640');
   });
 });
