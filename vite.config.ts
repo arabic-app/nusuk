@@ -9,15 +9,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function servePublicOrtPlugin(): Plugin {
   return {
     name: 'serve-public-ort',
+    enforce: 'pre',
     resolveId(id) {
-      if (id.startsWith('/vendor/ort/') && (id.endsWith('.mjs') || id.endsWith('.js'))) {
-        return path.resolve(__dirname, 'public', id.slice(1));
+      const clean = id.split('?')[0];
+      if (clean.startsWith('/vendor/ort/') && (clean.endsWith('.mjs') || clean.endsWith('.js'))) {
+        return '\0' + clean;
       }
     },
     load(id) {
-      if (id.includes('/public/vendor/ort/') && (id.endsWith('.mjs') || id.endsWith('.js'))) {
-        if (fs.existsSync(id)) {
-          return fs.readFileSync(id, 'utf-8');
+      if (
+        id.startsWith('\0/vendor/ort/') ||
+        (id.startsWith('/vendor/ort/') && (id.endsWith('.mjs') || id.endsWith('.js')))
+      ) {
+        const rawId = id.startsWith('\0') ? id.slice(1) : id;
+        const filePath = path.resolve(__dirname, 'public', rawId.slice(1));
+        if (fs.existsSync(filePath)) {
+          return fs.readFileSync(filePath, 'utf-8');
         }
       }
     },
@@ -48,7 +55,7 @@ function servePublicOrtPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [preact(), servePublicOrtPlugin()],
+  plugins: [servePublicOrtPlugin(), preact()],
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
@@ -56,6 +63,7 @@ export default defineConfig({
     }
   },
   worker: {
-    format: 'es'
+    format: 'es',
+    plugins: () => [servePublicOrtPlugin()]
   }
 });
