@@ -38,7 +38,7 @@ export function ActionBar({
   const sheetPresetLabel = sheetConfig
     ? sheetConfig.preset === 'custom'
       ? `${sheetConfig.width}×${sheetConfig.height} ${sheetConfig.unit}`
-      : SHEET_PRESETS[sheetConfig.preset]?.name || sheetConfig.preset
+      : `${SHEET_PRESETS[sheetConfig.preset]?.name || sheetConfig.preset.toUpperCase()} (${SHEET_PRESETS[sheetConfig.preset]?.width}×${SHEET_PRESETS[sheetConfig.preset]?.height} ${SHEET_PRESETS[sheetConfig.preset]?.unit})`
     : '';
 
   return (

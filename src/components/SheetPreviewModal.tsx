@@ -97,10 +97,10 @@ export function SheetPreviewModal({
   const cropH = clampDimension(convertToPixels(dimension.height, dimension.unit, dimension.dpi));
   const layout = calculateSheetLayout(cropW, cropH, sheetConfig);
 
-  const presetName =
+  const presetLabel =
     sheetConfig.preset === 'custom'
-      ? `${sheetConfig.width}×${sheetConfig.height} ${sheetConfig.unit}`
-      : SHEET_PRESETS[sheetConfig.preset]?.name || sheetConfig.preset;
+      ? `${sheetConfig.width} × ${sheetConfig.height} ${sheetConfig.unit}`
+      : `${sheetConfig.preset.toUpperCase()} (${SHEET_PRESETS[sheetConfig.preset]?.width}×${SHEET_PRESETS[sheetConfig.preset]?.height} ${SHEET_PRESETS[sheetConfig.preset]?.unit})`;
 
   return (
     <div
@@ -122,7 +122,7 @@ export function SheetPreviewModal({
               <span>{t('palette.preview_title')}</span>
             </h2>
             <span class="sheet-modal-subtitle">
-              {presetName} • {t('palette.info', {
+              {presetLabel} • {t('palette.info', {
                 count: layout.totalPhotos,
                 cols: layout.cols,
                 rows: layout.rows
