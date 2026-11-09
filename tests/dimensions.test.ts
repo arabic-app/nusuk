@@ -64,10 +64,22 @@ describe('Dimensions engine', () => {
     expect(PRESETS.nusuk.lockRatio).toBe(true);
   });
 
-  it('contains Nusuk Document preset 1100x825 px', () => {
+  it('contains Nusuk Passport preset 1100x825 px and Resident preset 630x400 px', () => {
+    expect(PRESETS.nusukPassport).toBeDefined();
+    expect(PRESETS.nusukPassport.width).toBe(1100);
+    expect(PRESETS.nusukPassport.height).toBe(825);
+    expect(PRESETS.nusukPassport.unit).toBe('px');
+
+    expect(PRESETS.nusukResident).toBeDefined();
+    expect(PRESETS.nusukResident.width).toBe(630);
+    expect(PRESETS.nusukResident.height).toBe(400);
+    expect(PRESETS.nusukResident.unit).toBe('px');
+  });
+
+  it('contains Nusuk Document preset 825x1100 px', () => {
     expect(PRESETS.nusukDoc).toBeDefined();
-    expect(PRESETS.nusukDoc.width).toBe(1100);
-    expect(PRESETS.nusukDoc.height).toBe(825);
+    expect(PRESETS.nusukDoc.width).toBe(825);
+    expect(PRESETS.nusukDoc.height).toBe(1100);
     expect(PRESETS.nusukDoc.unit).toBe('px');
     expect(PRESETS.nusukDoc.dpi).toBe(300);
     expect(PRESETS.nusukDoc.lockRatio).toBe(true);

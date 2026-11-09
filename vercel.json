@@ -1,4 +1,27 @@
 {
+  "rewrites": [
+    {
+      "source": "/manifest.webmanifest",
+      "has": [
+        {
+          "type": "query",
+          "key": "brand",
+          "value": "portrait"
+        }
+      ],
+      "destination": "/manifest-portrait.webmanifest"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "has": [
+        {
+          "type": "host",
+          "value": "^(?!.*nusuk).*$"
+        }
+      ],
+      "destination": "/manifest-portrait.webmanifest"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

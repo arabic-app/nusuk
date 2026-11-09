@@ -19,4 +19,12 @@ describe('PWA Configuration and Registration', () => {
     expect(main).toContain("virtual:pwa-register");
     expect(main).toContain("registerSW");
   });
+
+  it('adapts PWA manifest and apple touch icons in anti-fouc.js for brand differentiation', () => {
+    const antiFouc = fs.readFileSync(path.resolve(process.cwd(), 'public/anti-fouc.js'), 'utf-8');
+    expect(antiFouc).toContain('manifest-portrait.webmanifest');
+    expect(antiFouc).toContain('portrait-apple-touch-icon-180x180.png');
+    expect(antiFouc).toContain('apple-mobile-web-app-title');
+    expect(antiFouc).toContain('Portrait Photo');
+  });
 });

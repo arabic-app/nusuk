@@ -42,21 +42,87 @@ export function getBrand(): Brand {
   return currentBrand;
 }
 
+export interface BrandMetadata {
+  title: string;
+  shortTitle: string;
+  description: string;
+  themeColor: { light: string; dark: string };
+  appleTouchIcon: string;
+  favicon: string;
+  manifest: string;
+}
+
+export function getBrandMetadata(brand: Brand): BrandMetadata {
+  if (brand === 'nusuk') {
+    return {
+      title: 'Nusuk Photo — Recadrage photo Hajj & Omra',
+      shortTitle: 'Nusuk Photo',
+      description: "Recadrage et mise en conformité de photos d'identité pour le portail Hajj Nusuk (480x640, fond blanc, < 1 Mo).",
+      themeColor: { light: '#006C35', dark: '#0C1511' },
+      appleTouchIcon: '/icons/apple-touch-icon-180x180.png',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕋</text></svg>",
+      manifest: '/manifest.webmanifest'
+    };
+  }
+  return {
+    title: "Portrait Photo — Recadrage photo d'identité & passeport",
+    shortTitle: 'Portrait Photo',
+    description: "Recadrage et mise en conformité de photos d'identité et passeports (fond blanc, formats officiels).",
+    themeColor: { light: '#0284C7', dark: '#0B132B' },
+    appleTouchIcon: '/icons/portrait-apple-touch-icon-180x180.png',
+    favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>",
+    manifest: '/manifest-portrait.webmanifest'
+  };
+}
+
+export function applyBrandToDom(brand: Brand): void {
+  if (typeof document === 'undefined') return;
+
+  const meta = getBrandMetadata(brand);
+  document.documentElement.setAttribute('data-brand', brand === 'nusuk' ? 'nusuk' : 'azure');
+  document.title = meta.title;
+
+  const theme = document.documentElement.getAttribute('data-theme') || 'light';
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', theme === 'dark' ? meta.themeColor.dark : meta.themeColor.light);
+  }
+
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    metaDesc.setAttribute('content', meta.description);
+  }
+
+  const metaAppleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (metaAppleTitle) {
+    metaAppleTitle.setAttribute('content', meta.shortTitle);
+  }
+
+  const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+  if (appleTouchIcon) {
+    appleTouchIcon.setAttribute('href', meta.appleTouchIcon);
+  }
+
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) {
+    favicon.setAttribute('href', meta.favicon);
+  }
+
+  let manifestLink = document.querySelector('link[rel="manifest"]');
+  if (manifestLink) {
+    manifestLink.setAttribute('href', meta.manifest);
+  } else {
+    manifestLink = document.createElement('link');
+    manifestLink.setAttribute('rel', 'manifest');
+    manifestLink.setAttribute('href', meta.manifest);
+    document.head.appendChild(manifestLink);
+  }
+}
+
 export function setBrand(brand: Brand): void {
   currentBrand = brand;
   brandExplicitlySet = true;
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-brand', brand === 'nusuk' ? 'nusuk' : 'azure');
-    const theme = document.documentElement.getAttribute('data-theme') || 'light';
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      if (brand === 'nusuk') {
-        metaThemeColor.setAttribute('content', theme === 'dark' ? '#0C1511' : '#006C35');
-      } else {
-        metaThemeColor.setAttribute('content', theme === 'dark' ? '#0B132B' : '#0284C7');
-      }
-    }
-  }
+  applyBrandToDom(brand);
 
   brandListeners.forEach((cb) => {
     try {

@@ -2,23 +2,43 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
-function createPng(width, height, isMaskable = false) {
+function createPng(width, height, isMaskable = false, brand = 'nusuk') {
   // Simple uncompressed RGBA PNG generator
   const bytesPerPixel = 4;
   const rowSize = width * bytesPerPixel;
   const rawData = Buffer.alloc(height * (1 + rowSize));
 
-  const bgR = 0x00, bgG = 0x6c, bgB = 0x35; // #006C35
+  const bgR = brand === 'nusuk' ? 0x00 : 0x02;
+  const bgG = brand === 'nusuk' ? 0x6c : 0x84;
+  const bgB = brand === 'nusuk' ? 0x35 : 0xc7;
+
+  // Nusuk branding constants
   const goldR = 0xd4, goldG = 0xaf, goldB = 0x37; // Gold #D4AF37
   const blackR = 0x10, blackG = 0x10, blackB = 0x10;
-  const whiteR = 0xff, whiteG = 0xff, whiteB = 0xff;
 
-  // Kaaba box bounding relative to canvas
-  const padding = isMaskable ? Math.round(width * 0.22) : Math.round(width * 0.18);
-  const boxLeft = padding;
-  const boxRight = width - padding;
-  const boxTop = padding + Math.round(height * 0.05);
-  const boxBottom = height - padding;
+  // Portrait branding constants
+  const padding = isMaskable ? Math.round(width * 0.22) : Math.round(width * 0.16);
+  const cardLeft = padding;
+  const cardRight = width - padding;
+  const cardTop = isMaskable ? padding : Math.round(height * 0.14);
+  const cardBottom = height - (isMaskable ? padding : Math.round(height * 0.14));
+  const cr = Math.round((cardRight - cardLeft) * 0.15);
+
+  const headCx = Math.round(width / 2);
+  const headCy = cardTop + Math.round((cardBottom - cardTop) * 0.36);
+  const headR = Math.round((cardRight - cardLeft) * 0.18);
+
+  const shoulderCx = headCx;
+  const shoulderCy = cardTop + Math.round((cardBottom - cardTop) * 0.78);
+  const shoulderRx = Math.round((cardRight - cardLeft) * 0.34);
+  const shoulderRy = Math.round((cardBottom - cardTop) * 0.28);
+
+  // Nusuk box bounding relative to canvas
+  const nusukPadding = isMaskable ? Math.round(width * 0.22) : Math.round(width * 0.18);
+  const boxLeft = nusukPadding;
+  const boxRight = width - nusukPadding;
+  const boxTop = nusukPadding + Math.round(height * 0.05);
+  const boxBottom = height - nusukPadding;
   const goldBandTop = boxTop + Math.round((boxBottom - boxTop) * 0.18);
   const goldBandBottom = goldBandTop + Math.max(2, Math.round(height * 0.04));
 
@@ -28,15 +48,53 @@ function createPng(width, height, isMaskable = false) {
     for (let x = 0; x < width; x++) {
       let r = bgR, g = bgG, b = bgB, a = 255;
 
-      if (x >= boxLeft && x <= boxRight && y >= boxTop && y <= boxBottom) {
-        if (y >= goldBandTop && y <= goldBandBottom) {
-          r = goldR; g = goldG; b = goldB;
-        } else {
-          r = blackR; g = blackG; b = blackB;
+      if (brand === 'nusuk') {
+        if (x >= boxLeft && x <= boxRight && y >= boxTop && y <= boxBottom) {
+          if (y >= goldBandTop && y <= goldBandBottom) {
+            r = goldR; g = goldG; b = goldB;
+          } else {
+            r = blackR; g = blackG; b = blackB;
+          }
+          // Border outline
+          if (x === boxLeft || x === boxRight || y === boxTop || y === boxBottom) {
+            r = goldR; g = goldG; b = goldB;
+          }
         }
-        // Border outline
-        if (x === boxLeft || x === boxRight || y === boxTop || y === boxBottom) {
-          r = goldR; g = goldG; b = goldB;
+      } else {
+        // Portrait brand: modern rounded ID photo badge with silhouette
+        let inCard = x >= cardLeft && x <= cardRight && y >= cardTop && y <= cardBottom;
+        if (inCard) {
+          if (x < cardLeft + cr && y < cardTop + cr) {
+            const dx = x - (cardLeft + cr), dy = y - (cardTop + cr);
+            if (dx * dx + dy * dy > cr * cr) inCard = false;
+          } else if (x > cardRight - cr && y < cardTop + cr) {
+            const dx = x - (cardRight - cr), dy = y - (cardTop + cr);
+            if (dx * dx + dy * dy > cr * cr) inCard = false;
+          } else if (x < cardLeft + cr && y > cardBottom - cr) {
+            const dx = x - (cardLeft + cr), dy = y - (cardBottom - cr);
+            if (dx * dx + dy * dy > cr * cr) inCard = false;
+          } else if (x > cardRight - cr && y > cardBottom - cr) {
+            const dx = x - (cardRight - cr), dy = y - (cardBottom - cr);
+            if (dx * dx + dy * dy > cr * cr) inCard = false;
+          }
+        }
+
+        if (inCard) {
+          r = 0xff; g = 0xff; b = 0xff; // White card surface
+          const hdx = x - headCx, hdy = y - headCy;
+          if (hdx * hdx + hdy * hdy <= headR * headR) {
+            r = 0x02; g = 0x84; b = 0xc7; // Silhouette head
+          } else {
+            const sdx = x - shoulderCx, sdy = y - shoulderCy;
+            const inShoulder = (sdx * sdx) / (shoulderRx * shoulderRx) + (sdy * sdy) / (shoulderRy * shoulderRy) <= 1;
+            if (
+              inShoulder &&
+              y >= headCy + headR + Math.max(1, Math.round(height * 0.02)) &&
+              y <= cardBottom - Math.max(2, Math.round(height * 0.04))
+            ) {
+              r = 0x02; g = 0x84; b = 0xc7; // Silhouette shoulders
+            }
+          }
         }
       }
 
@@ -99,15 +157,23 @@ const iconsDir = path.resolve(process.cwd(), 'public/icons');
 fs.mkdirSync(iconsDir, { recursive: true });
 
 const targets = [
-  { name: 'pwa-64x64.png', size: 64, maskable: false },
-  { name: 'pwa-192x192.png', size: 192, maskable: false },
-  { name: 'pwa-512x512.png', size: 512, maskable: false },
-  { name: 'maskable-icon-512x512.png', size: 512, maskable: true },
-  { name: 'apple-touch-icon-180x180.png', size: 180, maskable: false },
+  // Nusuk brand icons
+  { name: 'pwa-64x64.png', size: 64, maskable: false, brand: 'nusuk' },
+  { name: 'pwa-192x192.png', size: 192, maskable: false, brand: 'nusuk' },
+  { name: 'pwa-512x512.png', size: 512, maskable: false, brand: 'nusuk' },
+  { name: 'maskable-icon-512x512.png', size: 512, maskable: true, brand: 'nusuk' },
+  { name: 'apple-touch-icon-180x180.png', size: 180, maskable: false, brand: 'nusuk' },
+
+  // Portrait (Azure) brand icons
+  { name: 'portrait-pwa-64x64.png', size: 64, maskable: false, brand: 'portrait' },
+  { name: 'portrait-pwa-192x192.png', size: 192, maskable: false, brand: 'portrait' },
+  { name: 'portrait-pwa-512x512.png', size: 512, maskable: false, brand: 'portrait' },
+  { name: 'portrait-maskable-icon-512x512.png', size: 512, maskable: true, brand: 'portrait' },
+  { name: 'portrait-apple-touch-icon-180x180.png', size: 180, maskable: false, brand: 'portrait' },
 ];
 
 for (const t of targets) {
-  const buf = createPng(t.size, t.size, t.maskable);
+  const buf = createPng(t.size, t.size, t.maskable, t.brand);
   fs.writeFileSync(path.join(iconsDir, t.name), buf);
-  console.log(`Generated ${t.name} (${t.size}x${t.size})`);
+  console.log(`Generated ${t.name} (${t.size}x${t.size}, ${t.brand})`);
 }

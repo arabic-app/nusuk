@@ -32,7 +32,23 @@ function servePublicOrtPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url?.split('?')[0];
-        if (url && (url.startsWith('/vendor/ort/') || url.startsWith('/models/'))) {
+
+        // Route manifest based on brand / host in dev mode
+        if (url === '/manifest.webmanifest') {
+          const host = (req.headers.host || '').toLowerCase();
+          const query = req.url?.includes('?') ? req.url.split('?')[1] : '';
+          const isNusuk = host.includes('nusuk') || query.includes('brand=nusuk');
+          if (!isNusuk) {
+            const portraitPath = path.resolve(__dirname, 'public/manifest-portrait.webmanifest');
+            if (fs.existsSync(portraitPath)) {
+              res.setHeader('Content-Type', 'application/manifest+json');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              return res.end(fs.readFileSync(portraitPath));
+            }
+          }
+        }
+
+        if (url && (url.startsWith('/vendor/ort/') || url.startsWith('/models/') || url.endsWith('.webmanifest'))) {
           const filePath = path.resolve(__dirname, 'public', url.slice(1));
           if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             if (url.endsWith('.mjs') || url.endsWith('.js')) {
@@ -41,8 +57,8 @@ function servePublicOrtPlugin(): Plugin {
               res.setHeader('Content-Type', 'application/wasm');
             } else if (url.endsWith('.onnx')) {
               res.setHeader('Content-Type', 'application/octet-stream');
-            } else if (url.endsWith('.json')) {
-              res.setHeader('Content-Type', 'application/json');
+            } else if (url.endsWith('.json') || url.endsWith('.webmanifest')) {
+              res.setHeader('Content-Type', 'application/manifest+json');
             }
             res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
             res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
@@ -61,7 +77,7 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['anti-fouc.js'],
+      includeAssets: ['anti-fouc.js', 'manifest-portrait.webmanifest', 'manifest-nusuk.webmanifest'],
       manifest: {
         id: '/',
         name: 'Nusuk Photo — Recadrage photo Hajj & Omra',
@@ -99,7 +115,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,wasm,onnx}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,wasm,onnx,webmanifest}'],
         globIgnores: ['**/assets/*.wasm'],
         maximumFileSizeToCacheInBytes: 35 * 1024 * 1024,
         runtimeCaching: [

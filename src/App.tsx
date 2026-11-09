@@ -164,7 +164,7 @@ export function App() {
         const targetDim =
           brand === 'nusuk'
             ? isLandscape
-              ? PRESETS.nusukDoc
+              ? PRESETS.nusukPassport
               : PRESETS.nusuk
             : PRESETS.passport;
         setDimension(targetDim);

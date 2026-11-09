@@ -364,17 +364,25 @@ describe('SettingsPanel component', () => {
     );
 
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    // Exactly 2 presets: Nusuk Identité and Nusuk Document (the other 2 choices were deleted)
-    expect(presetBtns.length).toBe(2);
+    // Exactly 4 presets for Nusuk: Photo, Passeport, Résident, Document
+    expect(presetBtns.length).toBe(4);
 
     const idBtn = Array.from(presetBtns).find(b => b.textContent?.includes('480'));
-    expect(idBtn?.textContent).toContain('480 x 640 (Nusuk Identité)');
-    expect(idBtn?.title).toBe("Photo d'identité sur Nusuk");
+    expect(idBtn?.textContent).toContain('480 x 640 (Nusuk Photo)');
+    expect(idBtn?.title).toBe("Photo d'identité sur Nusuk (480×640)");
     expect(idBtn?.classList.contains('btn-primary')).toBe(true);
 
-    const docBtn = Array.from(presetBtns).find(b => b.textContent?.includes('1100'));
-    expect(docBtn?.textContent).toContain('1100 x 825 (Nusuk Document)');
-    expect(docBtn?.title).toBe("Document sur Nusuk: passeport, carte de séjour ...");
+    const passportBtn = Array.from(presetBtns).find(b => b.textContent?.includes('Nusuk Passeport'));
+    expect(passportBtn?.textContent).toContain('1100 x 825 (Nusuk Passeport)');
+    expect(passportBtn?.title).toBe('Passeport sur Nusuk (1100×825)');
+
+    const residentBtn = Array.from(presetBtns).find(b => b.textContent?.includes('Nusuk Résident'));
+    expect(residentBtn?.textContent).toContain('630 x 400 (Nusuk Résident)');
+    expect(residentBtn?.title).toBe('Carte de résident sur Nusuk (630×400)');
+
+    const docBtn = Array.from(presetBtns).find(b => b.textContent?.includes('Nusuk Document'));
+    expect(docBtn?.textContent).toContain('825 x 1100 (Nusuk Document)');
+    expect(docBtn?.title).toBe('Document sur Nusuk (825×1100)');
     expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
 
     // Click document preset
@@ -1239,7 +1247,7 @@ describe('App component', () => {
     expect(document.querySelector('.sheet-modal')).toBeNull();
   });
 
-  it('disables face guide and selects 1100x825 Nusuk Document preset by default for landscape photos', async () => {
+  it('disables face guide and selects 1100x825 Nusuk Passport preset by default for landscape photos', async () => {
     setBrand('nusuk');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 1200,
@@ -1262,11 +1270,11 @@ describe('App component', () => {
     expect(ovalBtn).toBeDefined();
     expect(ovalBtn?.classList.contains('active')).toBe(false);
 
-    // 1100x825 (Nusuk Document) must be selected by default
+    // 1100x825 (Nusuk Passeport) must be selected by default
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
+    const passportBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('Nusuk Passeport'));
     const idBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('480'));
-    expect(docBtn?.classList.contains('btn-primary')).toBe(true);
+    expect(passportBtn?.classList.contains('btn-primary')).toBe(true);
     expect(idBtn?.classList.contains('btn-secondary')).toBe(true);
 
     const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
@@ -1275,7 +1283,7 @@ describe('App component', () => {
     expect(heightInput?.value).toBe('825');
   });
 
-  it('enables face guide and selects 480x640 Nusuk Identité preset by default for portrait photos', async () => {
+  it('enables face guide and selects 480x640 Nusuk Photo preset by default for portrait photos', async () => {
     setBrand('nusuk');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 600,
@@ -1298,7 +1306,7 @@ describe('App component', () => {
     expect(ovalBtn).toBeDefined();
     expect(ovalBtn?.classList.contains('active')).toBe(true);
 
-    // 480x640 (Nusuk Identité) must be selected by default
+    // 480x640 (Nusuk Photo) must be selected by default
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
     const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
     const idBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('480'));

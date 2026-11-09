@@ -4,11 +4,19 @@ import path from 'node:path';
 
 describe('PWA Assets', () => {
   const iconTargets = [
+    // Nusuk brand icons
     { path: 'public/icons/pwa-64x64.png', size: 64 },
     { path: 'public/icons/pwa-192x192.png', size: 192 },
     { path: 'public/icons/pwa-512x512.png', size: 512 },
     { path: 'public/icons/maskable-icon-512x512.png', size: 512 },
-    { path: 'public/icons/apple-touch-icon-180x180.png', size: 180 }
+    { path: 'public/icons/apple-touch-icon-180x180.png', size: 180 },
+
+    // Portrait (Azure) brand icons
+    { path: 'public/icons/portrait-pwa-64x64.png', size: 64 },
+    { path: 'public/icons/portrait-pwa-192x192.png', size: 192 },
+    { path: 'public/icons/portrait-pwa-512x512.png', size: 512 },
+    { path: 'public/icons/portrait-maskable-icon-512x512.png', size: 512 },
+    { path: 'public/icons/portrait-apple-touch-icon-180x180.png', size: 180 }
   ];
 
   it('contains all required PWA icons with non-zero file sizes', () => {

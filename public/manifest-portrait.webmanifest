@@ -1,0 +1,36 @@
+{
+  "id": "/?brand=portrait",
+  "name": "Portrait Photo — Recadrage photo d'identité & passeport",
+  "short_name": "Portrait Photo",
+  "description": "Recadrage et mise en conformité de photos d'identité et passeports (fond blanc, formats officiels).",
+  "start_url": "/?brand=portrait",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["productivity", "utilities", "photo"],
+  "theme_color": "#0284C7",
+  "background_color": "#F8FAFC",
+  "icons": [
+    {
+      "src": "/icons/portrait-pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/portrait-pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/portrait-pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/portrait-maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

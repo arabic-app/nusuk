@@ -1,0 +1,36 @@
+{
+  "id": "/?brand=nusuk",
+  "name": "Nusuk Photo — Recadrage photo Hajj & Omra",
+  "short_name": "Nusuk Photo",
+  "description": "Recadrage et mise en conformité de photos d'identité pour le portail Hajj Nusuk (480x640, fond blanc, < 1 Mo).",
+  "start_url": "/?brand=nusuk",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["productivity", "utilities", "photo"],
+  "theme_color": "#006C35",
+  "background_color": "#F6F8F6",
+  "icons": [
+    {
+      "src": "/icons/pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

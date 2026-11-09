@@ -1,4 +1,5 @@
 // src/components/SettingsPanel.tsx
+import { useState, useEffect } from 'preact/hooks';
 import { OutputDimension, ExportConfig, Unit, SheetConfig } from '../types';
 import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { calculateSheetLayout } from '../utils/sheetTiling';
@@ -63,15 +64,32 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const isNusuk = brand === 'nusuk';
 
-  const isNusukPreset =
-    dimension.width === PRESETS.nusuk.width &&
-    dimension.height === PRESETS.nusuk.height &&
-    dimension.unit === PRESETS.nusuk.unit;
+  const [selectedNusukPreset, setSelectedNusukPreset] = useState<'photo' | 'passport' | 'resident' | 'doc' | null>(() => {
+    if (dimension.width === PRESETS.nusuk.width && dimension.height === PRESETS.nusuk.height && dimension.unit === PRESETS.nusuk.unit) return 'photo';
+    if (dimension.width === PRESETS.nusukPassport.width && dimension.height === PRESETS.nusukPassport.height && dimension.unit === PRESETS.nusukPassport.unit) return 'passport';
+    if (dimension.width === PRESETS.nusukResident.width && dimension.height === PRESETS.nusukResident.height && dimension.unit === PRESETS.nusukResident.unit) return 'resident';
+    if (dimension.width === PRESETS.nusukDoc.width && dimension.height === PRESETS.nusukDoc.height && dimension.unit === PRESETS.nusukDoc.unit) return 'doc';
+    return null;
+  });
 
-  const isNusukDocPreset =
-    dimension.width === PRESETS.nusukDoc.width &&
-    dimension.height === PRESETS.nusukDoc.height &&
-    dimension.unit === PRESETS.nusukDoc.unit;
+  useEffect(() => {
+    if (dimension.width === PRESETS.nusuk.width && dimension.height === PRESETS.nusuk.height && dimension.unit === PRESETS.nusuk.unit) {
+      setSelectedNusukPreset('photo');
+    } else if (dimension.width === PRESETS.nusukPassport.width && dimension.height === PRESETS.nusukPassport.height && dimension.unit === PRESETS.nusukPassport.unit) {
+      setSelectedNusukPreset('passport');
+    } else if (dimension.width === PRESETS.nusukResident.width && dimension.height === PRESETS.nusukResident.height && dimension.unit === PRESETS.nusukResident.unit) {
+      setSelectedNusukPreset('resident');
+    } else if (dimension.width === PRESETS.nusukDoc.width && dimension.height === PRESETS.nusukDoc.height && dimension.unit === PRESETS.nusukDoc.unit) {
+      setSelectedNusukPreset('doc');
+    } else {
+      setSelectedNusukPreset(null);
+    }
+  }, [dimension.width, dimension.height, dimension.unit]);
+
+  const isNusukPhotoPreset = selectedNusukPreset === 'photo';
+  const isNusukPassportPreset = selectedNusukPreset === 'passport';
+  const isNusukResidentPreset = selectedNusukPreset === 'resident';
+  const isNusukDocPreset = selectedNusukPreset === 'doc';
 
   const isPassportPreset =
     dimension.width === PRESETS.passport.width &&
@@ -215,16 +233,44 @@ export function SettingsPanel({
             <>
               <button
                 type="button"
-                class={`btn btn-sm ${isNusukPreset ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => onDimensionChange(PRESETS.nusuk)}
+                class={`btn btn-sm ${isNusukPhotoPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => {
+                  setSelectedNusukPreset('photo');
+                  onDimensionChange(PRESETS.nusuk);
+                }}
                 title={t('size.preset_nusuk_tooltip')}
               >
                 {t('size.preset_nusuk')}
               </button>
               <button
                 type="button"
+                class={`btn btn-sm ${isNusukPassportPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => {
+                  setSelectedNusukPreset('passport');
+                  onDimensionChange(PRESETS.nusukPassport);
+                }}
+                title={t('size.preset_nusuk_passport_tooltip')}
+              >
+                {t('size.preset_nusuk_passport')}
+              </button>
+              <button
+                type="button"
+                class={`btn btn-sm ${isNusukResidentPreset ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => {
+                  setSelectedNusukPreset('resident');
+                  onDimensionChange(PRESETS.nusukResident);
+                }}
+                title={t('size.preset_nusuk_resident_tooltip')}
+              >
+                {t('size.preset_nusuk_resident')}
+              </button>
+              <button
+                type="button"
                 class={`btn btn-sm ${isNusukDocPreset ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => onDimensionChange(PRESETS.nusukDoc)}
+                onClick={() => {
+                  setSelectedNusukPreset('doc');
+                  onDimensionChange(PRESETS.nusukDoc);
+                }}
                 title={t('size.preset_nusuk_doc_tooltip')}
               >
                 {t('size.preset_nusuk_doc')}

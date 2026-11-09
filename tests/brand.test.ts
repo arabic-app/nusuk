@@ -50,6 +50,32 @@ describe('Brand detection engine', () => {
     setBrand('portrait');
     expect(document.documentElement.getAttribute('data-brand')).toBe('azure');
   });
+
+  it('updates PWA meta tags and manifest links when switching brands', () => {
+    // Setup initial DOM elements
+    document.head.innerHTML = `
+      <meta name="theme-color" content="#006C35" />
+      <meta name="description" content="Nusuk description" />
+      <meta name="apple-mobile-web-app-title" content="Nusuk Photo" />
+      <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png" />
+      <link rel="icon" href="data:image/svg+xml,kaaba" />
+      <link rel="manifest" href="/manifest.webmanifest" />
+    `;
+
+    setBrand('portrait');
+    expect(document.title).toContain('Portrait Photo');
+    expect(document.querySelector('meta[name="apple-mobile-web-app-title"]')?.getAttribute('content')).toBe('Portrait Photo');
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toContain('passeports');
+    expect(document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href')).toBe('/icons/portrait-apple-touch-icon-180x180.png');
+    expect(document.querySelector('link[rel="manifest"]')?.getAttribute('href')).toBe('/manifest-portrait.webmanifest');
+
+    setBrand('nusuk');
+    expect(document.title).toContain('Nusuk Photo');
+    expect(document.querySelector('meta[name="apple-mobile-web-app-title"]')?.getAttribute('content')).toBe('Nusuk Photo');
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toContain('Nusuk');
+    expect(document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href')).toBe('/icons/apple-touch-icon-180x180.png');
+    expect(document.querySelector('link[rel="manifest"]')?.getAttribute('href')).toBe('/manifest.webmanifest');
+  });
 });
 
 describe('Header component brand customization', () => {
@@ -107,7 +133,7 @@ describe('SettingsPanel brand customization', () => {
     container.remove();
   });
 
-  it('renders only the 2 Nusuk presets when brand is nusuk', () => {
+  it('renders all 4 Nusuk presets in correct order when brand is nusuk', () => {
     render(
       h(SettingsPanel, {
         dimension: PRESETS.nusuk,
@@ -128,9 +154,18 @@ describe('SettingsPanel brand customization', () => {
     );
 
     const buttons = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    expect(buttons.length).toBe(2);
-    expect(buttons[0]?.textContent).toContain('Nusuk Identité');
-    expect(buttons[1]?.textContent).toContain('Nusuk Document');
+    expect(buttons.length).toBe(4);
+    expect(buttons[0]?.textContent).toContain('480 x 640 (Nusuk Photo)');
+    expect(buttons[0]?.title).toBe("Photo d'identité sur Nusuk (480×640)");
+
+    expect(buttons[1]?.textContent).toContain('1100 x 825 (Nusuk Passeport)');
+    expect(buttons[1]?.title).toBe('Passeport sur Nusuk (1100×825)');
+
+    expect(buttons[2]?.textContent).toContain('630 x 400 (Nusuk Résident)');
+    expect(buttons[2]?.title).toBe('Carte de résident sur Nusuk (630×400)');
+
+    expect(buttons[3]?.textContent).toContain('825 x 1100 (Nusuk Document)');
+    expect(buttons[3]?.title).toBe('Document sur Nusuk (825×1100)');
   });
 
   it('renders generic presets (Passeport, 2x2 in, Canada) and no Document preset when brand is portrait', () => {

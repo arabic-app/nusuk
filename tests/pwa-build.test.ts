@@ -25,4 +25,24 @@ describe('PWA Build Artifacts', () => {
     expect(manifestContent.theme_color).toBe('#006C35');
     expect(manifestContent.icons.length).toBeGreaterThanOrEqual(4);
   });
+
+  it('generates dist/manifest-portrait.webmanifest with azure theme upon build', () => {
+    const portraitManifestPath = path.resolve(process.cwd(), 'dist/manifest-portrait.webmanifest');
+    expect(fs.existsSync(portraitManifestPath), 'dist/manifest-portrait.webmanifest must exist after build').toBe(true);
+
+    const portraitContent = JSON.parse(fs.readFileSync(portraitManifestPath, 'utf-8'));
+    expect(portraitContent.name).toBe("Portrait Photo — Recadrage photo d'identité & passeport");
+    expect(portraitContent.short_name).toBe('Portrait Photo');
+    expect(portraitContent.display).toBe('standalone');
+    expect(portraitContent.theme_color).toBe('#0284C7');
+    expect(portraitContent.background_color).toBe('#F8FAFC');
+    expect(portraitContent.icons.length).toBeGreaterThanOrEqual(4);
+    expect(portraitContent.icons[0].src).toContain('portrait-pwa');
+  });
+
+  it('precaches both manifests and all brand icons in service worker', () => {
+    const swPath = path.resolve(process.cwd(), 'dist/sw.js');
+    const swContent = fs.readFileSync(swPath, 'utf-8');
+    expect(swContent).toContain('manifest-portrait.webmanifest');
+  });
 });
