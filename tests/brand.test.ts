@@ -133,7 +133,7 @@ describe('SettingsPanel brand customization', () => {
     expect(buttons[1]?.textContent).toContain('Nusuk Document');
   });
 
-  it('renders generic presets (Passeport, 2x2 in, Identité, Document) when brand is portrait', () => {
+  it('renders generic presets (Passeport, 2x2 in, Canada) and no Document preset when brand is portrait', () => {
     render(
       h(SettingsPanel, {
         dimension: PRESETS.passport,
@@ -154,16 +154,17 @@ describe('SettingsPanel brand customization', () => {
     );
 
     const buttons = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    expect(buttons.length).toBe(4);
+    expect(buttons.length).toBe(3);
     expect(buttons[0]?.textContent).toContain('35×45 mm (Passeport / CNI)');
     expect(buttons[1]?.textContent).toContain('51×51 mm (Visa US / 2×2 in)');
     expect(buttons[2]?.textContent).toContain('50×70 mm (Passeport Canada)');
-    expect(buttons[3]?.textContent).toContain('1100×825 (Document)');
 
-    // Should NOT contain the word Nusuk
+    // Should NOT contain Nusuk or Document
     const allText = Array.from(buttons).map(b => b.textContent).join(' ');
     expect(allText).not.toContain('Nusuk');
     expect(allText).not.toContain('480');
+    expect(allText).not.toContain('1100');
+    expect(allText).not.toContain('Document');
   });
 
   it('renders generic PNG warning when brand is portrait and limit exceeded', () => {

@@ -1311,7 +1311,7 @@ describe('App component', () => {
     expect(heightInput?.value).toBe('640');
   });
 
-  it('disables face guide and selects 1100x825 Document preset by default for landscape photos when brand is portrait', async () => {
+  it('disables face guide and maintains Passport preset by default for landscape photos when brand is portrait', async () => {
     setBrand('portrait');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 1200,
@@ -1334,18 +1334,18 @@ describe('App component', () => {
     expect(ovalBtn).toBeDefined();
     expect(ovalBtn?.classList.contains('active')).toBe(false);
 
-    // 1100x825 (Document) must be selected by default
+    // No Document preset exists for portrait brand, 3 passport buttons rendered
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    expect(presetBtns.length).toBe(4);
+    expect(presetBtns.length).toBe(3);
     const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
     const passportBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('35×45'));
-    expect(docBtn?.classList.contains('btn-primary')).toBe(true);
-    expect(passportBtn?.classList.contains('btn-secondary')).toBe(true);
+    expect(docBtn).toBeUndefined();
+    expect(passportBtn?.classList.contains('btn-primary')).toBe(true);
 
     const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
     const heightInput = container.querySelector<HTMLInputElement>('#dim-height');
-    expect(widthInput?.value).toBe('1100');
-    expect(heightInput?.value).toBe('825');
+    expect(widthInput?.value).toBe('35');
+    expect(heightInput?.value).toBe('45');
   });
 
   it('enables face guide and selects 35x45 mm Passport preset by default for portrait photos when brand is portrait', async () => {
@@ -1371,13 +1371,13 @@ describe('App component', () => {
     expect(ovalBtn).toBeDefined();
     expect(ovalBtn?.classList.contains('active')).toBe(true);
 
-    // 35x45 mm (Passeport / CNI) must be selected by default
+    // 35x45 mm (Passeport / CNI) must be selected by default, 3 buttons total
     const presetBtns = container.querySelectorAll<HTMLButtonElement>('.preset-buttons button');
-    expect(presetBtns.length).toBe(4);
+    expect(presetBtns.length).toBe(3);
     const docBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('1100'));
     const passportBtn = Array.from(presetBtns).find((b) => b.textContent?.includes('35×45'));
+    expect(docBtn).toBeUndefined();
     expect(passportBtn?.classList.contains('btn-primary')).toBe(true);
-    expect(docBtn?.classList.contains('btn-secondary')).toBe(true);
 
     const widthInput = container.querySelector<HTMLInputElement>('#dim-width');
     const heightInput = container.querySelector<HTMLInputElement>('#dim-height');

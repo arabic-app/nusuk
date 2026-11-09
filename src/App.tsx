@@ -159,9 +159,12 @@ export function App() {
         const isLandscape = bmp.width > bmp.height;
         setShowOvalGuide(!isLandscape);
 
-        const targetDim = isLandscape
-          ? (brand === 'nusuk' ? PRESETS.nusukDoc : PRESETS.document)
-          : (brand === 'nusuk' ? PRESETS.nusuk : PRESETS.passport);
+        const targetDim =
+          brand === 'nusuk'
+            ? isLandscape
+              ? PRESETS.nusukDoc
+              : PRESETS.nusuk
+            : PRESETS.passport;
         setDimension(targetDim);
         const targetW = clampDimension(convertToPixels(targetDim.width, targetDim.unit, targetDim.dpi));
         const targetH = clampDimension(convertToPixels(targetDim.height, targetDim.unit, targetDim.dpi));

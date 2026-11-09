@@ -87,14 +87,6 @@ export function SettingsPanel({
     dimension.height === PRESETS.canada.height &&
     dimension.unit === PRESETS.canada.unit;
 
-  const isDocPreset =
-    (dimension.width === PRESETS.document.width &&
-      dimension.height === PRESETS.document.height &&
-      dimension.unit === PRESETS.document.unit) ||
-    (dimension.width === PRESETS.nusukDoc.width &&
-      dimension.height === PRESETS.nusukDoc.height &&
-      dimension.unit === PRESETS.nusukDoc.unit);
-
   const onWidthChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;
     const clampedVal = dimension.unit === 'px' ? clampDimension(val) : val;
@@ -261,14 +253,6 @@ export function SettingsPanel({
                 title={t('size.preset_canada_tooltip')}
               >
                 {t('size.preset_canada')}
-              </button>
-              <button
-                type="button"
-                class={`btn btn-sm ${isDocPreset ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => onDimensionChange(PRESETS.document)}
-                title={t('size.preset_doc_tooltip')}
-              >
-                {t('size.preset_doc')}
               </button>
             </>
           )}
