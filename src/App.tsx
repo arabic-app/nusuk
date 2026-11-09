@@ -25,7 +25,7 @@ import { PRESETS, convertToPixels, clampDimension, createDefaultSheetConfig } fr
 import { calculateSheetLayout } from './utils/sheetTiling';
 import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransform } from './utils/transform';
 import { detectFace, computeFaceFraming } from './utils/faceDetection';
-import { renderAndEncode, getExportFilename, getMaxExportBytes } from './utils/exportBridge';
+import { renderAndEncode, getExportFilename, getMaxExportBytes, getMinNusukJpgBytes } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
 import { isPhotoSheetEnabled } from './utils/features';
 import { Brand, getBrand, initBrand, subscribeBrand } from './utils/brand';
@@ -88,22 +88,27 @@ export function App() {
   const [encodedBlob, setEncodedBlob] = useState<Blob | null>(null);
   const [adjustedQuality, setAdjustedQuality] = useState<number | undefined>();
   const [autoSwitchedToJpg, setAutoSwitchedToJpg] = useState(false);
+  const [autoSwitchedToPng, setAutoSwitchedToPng] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const initialTransformRef = useRef<TransformState | null>(null);
+  const lastPngBytesRef = useRef<number | null>(null);
 
   const updateTransform = (next: TransformState | ((prev: TransformState) => TransformState)) => {
     setEncodedBlob(null);
+    lastPngBytesRef.current = null;
     setTransform(next);
   };
 
   const updateDimension = (d: OutputDimension) => {
     setEncodedBlob(null);
+    lastPngBytesRef.current = null;
     setDimension(d);
   };
 
   const updateExportConfig = (cfg: ExportConfig) => {
     setEncodedBlob(null);
     setAutoSwitchedToJpg(false);
+    setAutoSwitchedToPng(false);
     setExportConfig(cfg);
   };
 
@@ -260,11 +265,32 @@ export function App() {
         );
 
         const effectiveLimit = exportConfig.maxBytes ?? getMaxExportBytes(brand);
-        if (brand === 'nusuk' && exportConfig.format === 'image/png' && res.bytes > effectiveLimit) {
-          setAutoSwitchedToJpg(true);
+
+        if (exportConfig.format === 'image/png') {
+          lastPngBytesRef.current = res.bytes;
+          if (brand === 'nusuk' && res.bytes > effectiveLimit) {
+            setAutoSwitchedToJpg(true);
+            setAutoSwitchedToPng(false);
+            setExportConfig((prev) => ({
+              ...prev,
+              format: 'image/jpeg'
+            }));
+            return;
+          }
+        }
+
+        const minJpgLimit = getMinNusukJpgBytes();
+        if (
+          brand === 'nusuk' &&
+          exportConfig.format === 'image/jpeg' &&
+          res.bytes < minJpgLimit &&
+          (!lastPngBytesRef.current || lastPngBytesRef.current <= effectiveLimit)
+        ) {
+          setAutoSwitchedToPng(true);
+          setAutoSwitchedToJpg(false);
           setExportConfig((prev) => ({
             ...prev,
-            format: 'image/jpeg'
+            format: 'image/png'
           }));
           return;
         }
@@ -321,6 +347,8 @@ export function App() {
   const handleClosePhoto = () => {
     setImageFile(null);
     setAutoSwitchedToJpg(false);
+    setAutoSwitchedToPng(false);
+    lastPngBytesRef.current = null;
     setOriginalBitmap((prev) => {
       prev?.close?.();
       return null;
@@ -553,6 +581,7 @@ export function App() {
               showPhotoSheet={showPhotoSheet}
               brand={brand}
               autoSwitchedToJpg={autoSwitchedToJpg}
+              autoSwitchedToPng={autoSwitchedToPng}
             />
           </div>
         )}

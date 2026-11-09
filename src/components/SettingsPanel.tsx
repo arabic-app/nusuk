@@ -3,7 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { OutputDimension, ExportConfig, Unit, SheetConfig } from '../types';
 import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { calculateSheetLayout } from '../utils/sheetTiling';
-import { getMaxExportBytes, formatMaxMb } from '../utils/exportBridge';
+import { getMaxExportBytes, formatMaxMb, formatFileSize, getMinNusukJpgBytes } from '../utils/exportBridge';
 import { isPhotoSheetEnabled } from '../utils/features';
 import { Brand, getBrand } from '../utils/brand';
 import { t } from '../utils/i18n';
@@ -39,6 +39,7 @@ export interface SettingsPanelProps {
   showPhotoSheet?: boolean;
   brand?: Brand;
   autoSwitchedToJpg?: boolean;
+  autoSwitchedToPng?: boolean;
 }
 
 export function SettingsPanel({
@@ -60,7 +61,8 @@ export function SettingsPanel({
   onOpenSheetPreview,
   showPhotoSheet = isPhotoSheetEnabled(),
   brand = getBrand(),
-  autoSwitchedToJpg
+  autoSwitchedToJpg,
+  autoSwitchedToPng
 }: SettingsPanelProps) {
   const isNusuk = brand === 'nusuk';
 
@@ -671,6 +673,17 @@ export function SettingsPanel({
             <span>
               {t('export.auto_switched_jpg', {
                 max: formatMaxMb(exportConfig.maxBytes ?? getMaxExportBytes(brand))
+              })}
+            </span>
+          </p>
+        )}
+
+        {isNusuk && autoSwitchedToPng && exportConfig.format === 'image/png' && (
+          <p class="quality-info auto-switch-info">
+            <IconInfo size={14} />
+            <span>
+              {t('export.auto_switched_png', {
+                min: formatFileSize(getMinNusukJpgBytes())
               })}
             </span>
           </p>

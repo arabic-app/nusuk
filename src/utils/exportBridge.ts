@@ -8,6 +8,7 @@ import WorkerConstructor from '../workers/export.worker.ts?worker';
 // Modifiez facilement ces variables selon vos besoins ou via les variables d'environnement VITE_ :
 // - MAX_NUSUK_BYTES : Le portail officiel Nusuk exige strictement des fichiers <= 1 Mo (1 000 000 octets).
 // - MAX_PORTRAIT_BYTES : Limite générique pour photos d'identité et documents (10 Mo par défaut).
+// - MIN_NUSUK_JPG_BYTES : En mode Nusuk, si un export JPG passe en dessous de 100 Ko (100 000 octets), basculer en PNG.
 export let MAX_NUSUK_BYTES: number =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_MAX_NUSUK_BYTES
     ? Number(import.meta.env.VITE_MAX_NUSUK_BYTES)
@@ -17,6 +18,25 @@ export let MAX_PORTRAIT_BYTES: number =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_MAX_PORTRAIT_BYTES
     ? Number(import.meta.env.VITE_MAX_PORTRAIT_BYTES)
     : 10_000_000;
+
+export let MIN_NUSUK_JPG_BYTES: number =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_MIN_NUSUK_JPG_BYTES
+    ? Number(import.meta.env.VITE_MIN_NUSUK_JPG_BYTES)
+    : 100_000;
+
+/**
+ * Retourne le seuil minimal en octets sous lequel un JPG en mode Nusuk doit basculer en PNG (100 Ko par défaut).
+ */
+export function getMinNusukJpgBytes(): number {
+  return MIN_NUSUK_JPG_BYTES;
+}
+
+/**
+ * Modifie dynamiquement le seuil minimal JPG pour le mode Nusuk.
+ */
+export function setMinNusukJpgBytes(bytes: number): void {
+  MIN_NUSUK_JPG_BYTES = bytes;
+}
 
 /**
  * Retourne la limite de poids maximale en octets selon la marque (nusuk vs portrait).

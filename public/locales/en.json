@@ -59,6 +59,7 @@
   "export.quality": "JPEG quality",
   "export.quality_adjusted": "Quality adjusted to {{quality}} to comply with {{max}} MB limit",
   "export.auto_switched_jpg": "Format automatically switched to JPG to comply with Nusuk {{max}} MB limit",
+  "export.auto_switched_png": "Format automatically switched to PNG (JPG size below {{min}} KB)",
   "export.png_warning": "This PNG exceeds {{max}} MB: Nusuk portal will reject it",
   "export.png_warning_portrait": "This PNG exceeds {{max}} MB: file too large",
   "export.switch_to_jpg": "Switch to JPG",

@@ -2,8 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   MAX_NUSUK_BYTES,
   MAX_PORTRAIT_BYTES,
+  MIN_NUSUK_JPG_BYTES,
   getMaxExportBytes,
   setMaxExportBytes,
+  getMinNusukJpgBytes,
+  setMinNusukJpgBytes,
   formatMaxMb,
   formatFileSize,
   getExportWorker,
@@ -86,6 +89,17 @@ describe('Export Pipeline & Web Worker', () => {
       expect(MAX_PORTRAIT_BYTES).toBe(10_000_000);
       expect(getMaxExportBytes('nusuk')).toBe(1_000_000);
       expect(getMaxExportBytes('portrait')).toBe(10_000_000);
+    });
+
+    it('enforces 100,000 bytes minimum for Nusuk JPG before switching to PNG', () => {
+      expect(MIN_NUSUK_JPG_BYTES).toBe(100_000);
+      expect(getMinNusukJpgBytes()).toBe(100_000);
+      const origMin = MIN_NUSUK_JPG_BYTES;
+      setMinNusukJpgBytes(80_000);
+      expect(getMinNusukJpgBytes()).toBe(80_000);
+      expect(MIN_NUSUK_JPG_BYTES).toBe(80_000);
+      setMinNusukJpgBytes(origMin);
+      expect(MIN_NUSUK_JPG_BYTES).toBe(100_000);
     });
 
     it('allows modifying export limit via setMaxExportBytes or variable mutation', () => {
