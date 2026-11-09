@@ -117,7 +117,7 @@ export function Dropzone({ onImageSelected, onError }: DropzoneProps) {
         >
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-primary dropzone-camera-btn"
             onClick={() => cameraInputRef.current?.click()}
           >
             <IconCamera size={18} />

@@ -128,6 +128,8 @@ describe('File validation', () => {
 
       const cameraBtn = container.querySelector('.dropzone-actions button');
       expect(cameraBtn).not.toBeNull();
+      expect(cameraBtn?.classList.contains('btn-primary')).toBe(true);
+      expect(cameraBtn?.classList.contains('dropzone-camera-btn')).toBe(true);
     });
 
     it('handles dragover and dragleave state', async () => {

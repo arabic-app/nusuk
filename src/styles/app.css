@@ -293,6 +293,52 @@
   margin-bottom: 16px;
 }
 
+.dropzone-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.dropzone-camera-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 108, 53, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.dropzone-camera-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 108, 53, 0.3);
+}
+
+.dropzone-camera-btn:active {
+  transform: translateY(0);
+}
+
+[data-brand="azure"] .dropzone-camera-btn {
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+}
+
+[data-brand="azure"] .dropzone-camera-btn:hover {
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+[data-theme="dark"] .dropzone-camera-btn {
+  color: #0C1511;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-brand="azure"][data-theme="dark"] .dropzone-camera-btn {
+  color: #FFFFFF;
+}
+
 .privacy-notice {
   font-size: 13px;
   color: var(--text-secondary);
