@@ -37,6 +37,7 @@ export interface SettingsPanelProps {
   onOpenSheetPreview?: () => void;
   showPhotoSheet?: boolean;
   brand?: Brand;
+  autoSwitchedToJpg?: boolean;
 }
 
 export function SettingsPanel({
@@ -57,7 +58,8 @@ export function SettingsPanel({
   onSheetConfigChange,
   onOpenSheetPreview,
   showPhotoSheet = isPhotoSheetEnabled(),
-  brand = getBrand()
+  brand = getBrand(),
+  autoSwitchedToJpg
 }: SettingsPanelProps) {
   const isNusuk = brand === 'nusuk';
 
@@ -616,6 +618,17 @@ export function SettingsPanel({
             <span>JPG</span>
           </label>
         </div>
+
+        {isNusuk && autoSwitchedToJpg && exportConfig.format === 'image/jpeg' && (
+          <p class="quality-info auto-switch-info">
+            <IconInfo size={14} />
+            <span>
+              {t('export.auto_switched_jpg', {
+                max: formatMaxMb(exportConfig.maxBytes ?? getMaxExportBytes(brand))
+              })}
+            </span>
+          </p>
+        )}
 
         {exportConfig.format === 'image/jpeg' && adjustedQuality !== undefined && (
           <p class="quality-info">

@@ -1348,6 +1348,93 @@ describe('App component', () => {
     expect(heightInput?.value).toBe('45');
   });
 
+  it('automatically switches from PNG to JPG on Nusuk when encoded size exceeds MAX_NUSUK_BYTES', async () => {
+    setBrand('nusuk');
+    let callCount = 0;
+    const encodeSpy = vi.spyOn(exportBridge, 'renderAndEncode').mockImplementation(async (_bitmap, _cropW, _cropH, _transform, config) => {
+      callCount++;
+      if (config.format === 'image/png') {
+        // PNG exceeds 1MB (e.g. 1.25 MB)
+        return {
+          blob: new Blob(['png-bytes-too-big'], { type: 'image/png' }),
+          width: 480,
+          height: 640,
+          bytes: 1_250_000
+        };
+      }
+      // JPG is below 1MB (e.g. 150 KB)
+      return {
+        blob: new Blob(['jpg-bytes-fitted'], { type: 'image/jpeg' }),
+        width: 480,
+        height: 640,
+        bytes: 150_000,
+        adjustedQuality: 0.92
+      };
+    });
+
+    try {
+      render(h(App, {}), container);
+
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      const file = createValidJpegFile('photo.jpg');
+      Object.defineProperty(input, 'files', { value: [file], writable: true });
+      input?.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Wait for image loading (80ms) + 1st debounce (300ms) + 2nd debounce after auto-switch (300ms) + margin
+      await new Promise((r) => setTimeout(r, 850));
+
+      // Must have called renderAndEncode at least twice (1st PNG, then 2nd JPG)
+      expect(callCount).toBeGreaterThanOrEqual(2);
+
+      // JPG radio must be checked
+      const jpgRadio = container.querySelector<HTMLInputElement>('input[value="image/jpeg"]');
+      const pngRadio = container.querySelector<HTMLInputElement>('input[value="image/png"]');
+      expect(jpgRadio?.checked).toBe(true);
+      expect(pngRadio?.checked).toBe(false);
+
+      // Auto-switch notice should be displayed
+      const autoSwitchNotice = container.querySelector('.auto-switch-info');
+      expect(autoSwitchNotice).not.toBeNull();
+      expect(autoSwitchNotice?.textContent).toContain('basculé automatiquement en JPG');
+
+      // Download button must be active
+      const downloadBtn = container.querySelector<HTMLButtonElement>('.download-btn');
+      expect(downloadBtn?.disabled).toBe(false);
+    } finally {
+      encodeSpy.mockRestore();
+    }
+  });
+
+  it('does NOT automatically switch from PNG to JPG on portrait brand when size is 1.2MB (under 10MB)', async () => {
+    setBrand('portrait');
+    const encodeSpy = vi.spyOn(exportBridge, 'renderAndEncode').mockResolvedValue({
+      blob: new Blob(['png-bytes'], { type: 'image/png' }),
+      width: 413,
+      height: 531,
+      bytes: 1_200_000
+    });
+
+    try {
+      render(h(App, {}), container);
+
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      const file = createValidJpegFile('photo.jpg');
+      Object.defineProperty(input, 'files', { value: [file], writable: true });
+      input?.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await new Promise((r) => setTimeout(r, 450));
+
+      // PNG radio must remain checked because 1.2MB is under portrait 10MB limit
+      const pngRadio = container.querySelector<HTMLInputElement>('input[value="image/png"]');
+      expect(pngRadio?.checked).toBe(true);
+
+      const autoSwitchNotice = container.querySelector('.auto-switch-info');
+      expect(autoSwitchNotice).toBeNull();
+    } finally {
+      encodeSpy.mockRestore();
+    }
+  });
+
   it('enables face guide and selects 35x45 mm Passport preset by default for portrait photos when brand is portrait', async () => {
     setBrand('portrait');
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({

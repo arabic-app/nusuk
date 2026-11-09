@@ -54,6 +54,7 @@
   "export.recommended": "Recommandé",
   "export.quality": "Qualité JPEG",
   "export.quality_adjusted": "Qualité ajustée à {{quality}} pour respecter la limite de {{max}} Mo",
+  "export.auto_switched_jpg": "Format basculé automatiquement en JPG pour respecter la limite Nusuk de {{max}} Mo",
   "export.png_warning": "Ce PNG dépasse {{max}} Mo : le portail Nusuk le refusera",
   "export.png_warning_portrait": "Ce PNG dépasse {{max}} Mo : fichier trop volumineux",
   "export.switch_to_jpg": "Passer en JPG",

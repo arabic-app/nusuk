@@ -54,6 +54,7 @@
   "export.recommended": "موصى به",
   "export.quality": "جودة JPEG",
   "export.quality_adjusted": "تم ضبط الجودة تلقائياً إلى {{quality}} للالتزام بحد {{max}} ميغابايت",
+  "export.auto_switched_jpg": "تم التحويل تلقائياً إلى JPG للالتزام بحد نسك ({{max}} ميغابايت)",
   "export.png_warning": "حجم ملف PNG يتجاوز {{max}} ميغابايت وسيرفضه نظام نسك",
   "export.png_warning_portrait": "حجم ملف PNG يتجاوز {{max}} ميغابايت: الملف كبير جداً",
   "export.switch_to_jpg": "التحويل إلى JPG",

@@ -662,6 +662,11 @@
   margin-top: 6px;
 }
 
+.auto-switch-info {
+  color: var(--primary);
+  font-weight: 500;
+}
+
 .warning-banner {
   background-color: #FEF3C7;
   border: 1px solid #FCD34D;

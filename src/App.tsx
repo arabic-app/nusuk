@@ -87,6 +87,7 @@ export function App() {
   const [encodedBytes, setEncodedBytes] = useState<number>(0);
   const [encodedBlob, setEncodedBlob] = useState<Blob | null>(null);
   const [adjustedQuality, setAdjustedQuality] = useState<number | undefined>();
+  const [autoSwitchedToJpg, setAutoSwitchedToJpg] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const initialTransformRef = useRef<TransformState | null>(null);
 
@@ -102,6 +103,7 @@ export function App() {
 
   const updateExportConfig = (cfg: ExportConfig) => {
     setEncodedBlob(null);
+    setAutoSwitchedToJpg(false);
     setExportConfig(cfg);
   };
 
@@ -256,6 +258,17 @@ export function App() {
           showPhotoSheet ? sheetConfig : undefined,
           controller.signal
         );
+
+        const effectiveLimit = exportConfig.maxBytes ?? getMaxExportBytes(brand);
+        if (brand === 'nusuk' && exportConfig.format === 'image/png' && res.bytes > effectiveLimit) {
+          setAutoSwitchedToJpg(true);
+          setExportConfig((prev) => ({
+            ...prev,
+            format: 'image/jpeg'
+          }));
+          return;
+        }
+
         setEncodedBytes(res.bytes);
         setEncodedBlob(res.blob);
         setAdjustedQuality(res.adjustedQuality);
@@ -270,7 +283,7 @@ export function App() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [activeBitmap, cropW, cropH, transform, exportConfig, sheetConfig, showPhotoSheet]);
+  }, [activeBitmap, cropW, cropH, transform, exportConfig, sheetConfig, showPhotoSheet, brand]);
 
   const handleDownload = () => {
     if (!encodedBlob) return;
@@ -307,6 +320,7 @@ export function App() {
 
   const handleClosePhoto = () => {
     setImageFile(null);
+    setAutoSwitchedToJpg(false);
     setOriginalBitmap((prev) => {
       prev?.close?.();
       return null;
@@ -538,6 +552,7 @@ export function App() {
               onOpenSheetPreview={showPhotoSheet ? () => setShowSheetPreview(true) : undefined}
               showPhotoSheet={showPhotoSheet}
               brand={brand}
+              autoSwitchedToJpg={autoSwitchedToJpg}
             />
           </div>
         )}
