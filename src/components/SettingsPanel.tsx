@@ -2,7 +2,7 @@
 import { OutputDimension, ExportConfig, Unit, SheetConfig } from '../types';
 import { PRESETS, SHEET_PRESETS, clampDimension, convertToPixels } from '../utils/dimensions';
 import { calculateSheetLayout } from '../utils/sheetTiling';
-import { MAX_NUSUK_BYTES } from '../utils/exportBridge';
+import { getMaxExportBytes, formatMaxMb } from '../utils/exportBridge';
 import { isPhotoSheetEnabled } from '../utils/features';
 import { Brand, getBrand } from '../utils/brand';
 import { t } from '../utils/i18n';
@@ -636,25 +636,39 @@ export function SettingsPanel({
         {exportConfig.format === 'image/jpeg' && adjustedQuality !== undefined && (
           <p class="quality-info">
             <IconInfo size={14} />
-            <span>{t('export.quality_adjusted', { quality: adjustedQuality.toFixed(2) })}</span>
+            <span>
+              {t('export.quality_adjusted', {
+                quality: adjustedQuality.toFixed(2),
+                max: formatMaxMb(exportConfig.maxBytes ?? getMaxExportBytes(brand))
+              })}
+            </span>
           </p>
         )}
 
-        {exportConfig.format === 'image/png' && encodedBytes > MAX_NUSUK_BYTES && (
-          <div class="warning-banner" role="alert">
-            <p>
-              <IconAlert size={16} />
-              <span>{isNusuk ? t('export.png_warning') : t('export.png_warning_portrait')}</span>
-            </p>
-            <button
-              type="button"
-              class="btn btn-sm btn-primary switch-btn"
-              onClick={() => onExportConfigChange({ ...exportConfig, format: 'image/jpeg' })}
-            >
-              {t('export.switch_to_jpg')}
-            </button>
-          </div>
-        )}
+        {exportConfig.format === 'image/png' &&
+          encodedBytes > (exportConfig.maxBytes ?? getMaxExportBytes(brand)) && (
+            <div class="warning-banner" role="alert">
+              <p>
+                <IconAlert size={16} />
+                <span>
+                  {isNusuk
+                    ? t('export.png_warning', {
+                        max: formatMaxMb(exportConfig.maxBytes ?? getMaxExportBytes(brand))
+                      })
+                    : t('export.png_warning_portrait', {
+                        max: formatMaxMb(exportConfig.maxBytes ?? getMaxExportBytes(brand))
+                      })}
+                </span>
+              </p>
+              <button
+                type="button"
+                class="btn btn-sm btn-primary switch-btn"
+                onClick={() => onExportConfigChange({ ...exportConfig, format: 'image/jpeg' })}
+              >
+                {t('export.switch_to_jpg')}
+              </button>
+            </div>
+          )}
       </div>
     </aside>
   );

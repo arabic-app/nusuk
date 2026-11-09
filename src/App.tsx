@@ -25,7 +25,7 @@ import { PRESETS, convertToPixels, clampDimension, createDefaultSheetConfig } fr
 import { calculateSheetLayout } from './utils/sheetTiling';
 import { createDefaultTransform, rotate90, toggleFlip, fitTransform, fillTransform } from './utils/transform';
 import { detectFace, computeFaceFraming } from './utils/faceDetection';
-import { renderAndEncode, getExportFilename, MAX_NUSUK_BYTES } from './utils/exportBridge';
+import { renderAndEncode, getExportFilename, getMaxExportBytes } from './utils/exportBridge';
 import { getBackgroundRemover } from './services/BackgroundRemover';
 import { isPhotoSheetEnabled } from './utils/features';
 import { Brand, getBrand, initBrand, subscribeBrand } from './utils/brand';
@@ -40,7 +40,13 @@ export function App() {
   const [brand, setBrandState] = useState<Brand>(getBrand());
 
   useEffect(() => {
-    const unsubBrand = subscribeBrand((b) => setBrandState(b));
+    const unsubBrand = subscribeBrand((b) => {
+      setBrandState(b);
+      setExportConfig((prev) => ({
+        ...prev,
+        maxBytes: getMaxExportBytes(b)
+      }));
+    });
     const unsubLocale = subscribeLocale(() => setTick((v) => v + 1));
     initBrand();
     initLocale();
@@ -68,11 +74,11 @@ export function App() {
   const [bgLoading, setBgLoading] = useState(false);
   const [featherRadius, setFeatherRadius] = useState(0);
 
-  const [exportConfig, setExportConfig] = useState<ExportConfig>({
+  const [exportConfig, setExportConfig] = useState<ExportConfig>(() => ({
     format: 'image/png',
     quality: 0.95,
-    maxBytes: MAX_NUSUK_BYTES
-  });
+    maxBytes: getMaxExportBytes(getBrand())
+  }));
 
   const [sheetConfig, setSheetConfig] = useState<SheetConfig>(createDefaultSheetConfig());
   const [showSheetPreview, setShowSheetPreview] = useState(false);
@@ -539,6 +545,8 @@ export function App() {
           cropWidth={cropW}
           cropHeight={cropH}
           bytes={encodedBytes}
+          maxBytes={exportConfig.maxBytes}
+          brand={brand}
           onDownload={handleDownload}
           disabled={!encodedBlob}
           sheetConfig={showPhotoSheet ? sheetConfig : undefined}

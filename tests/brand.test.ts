@@ -166,7 +166,7 @@ describe('SettingsPanel brand customization', () => {
     expect(allText).not.toContain('480');
   });
 
-  it('renders generic PNG warning when brand is portrait', () => {
+  it('renders generic PNG warning when brand is portrait and limit exceeded', () => {
     render(
       h(SettingsPanel, {
         dimension: PRESETS.passport,
@@ -189,6 +189,30 @@ describe('SettingsPanel brand customization', () => {
     const warning = container.querySelector('.warning-banner');
     expect(warning?.textContent).toContain('trop volumineux');
     expect(warning?.textContent).not.toContain('Nusuk');
+  });
+
+  it('does NOT render PNG warning for 1.2MB image when using portrait brand limit (10MB)', () => {
+    render(
+      h(SettingsPanel, {
+        dimension: PRESETS.passport,
+        onDimensionChange: vi.fn(),
+        exportConfig: { format: 'image/png', quality: 1, maxBytes: 10_000_000 },
+        onExportConfigChange: vi.fn(),
+        encodedBytes: 1_200_000,
+        bgRemovalActive: false,
+        bgLoading: false,
+        featherRadius: 0,
+        onToggleBgRemoval: vi.fn(),
+        onFeatherChange: vi.fn(),
+        sheetConfig: createDefaultSheetConfig(),
+        onSheetConfigChange: vi.fn(),
+        brand: 'portrait'
+      }),
+      container
+    );
+
+    const warning = container.querySelector('.warning-banner');
+    expect(warning).toBeNull();
   });
 });
 

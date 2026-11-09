@@ -2,13 +2,16 @@
 import { SheetConfig } from '../types';
 import { SHEET_PRESETS } from '../utils/dimensions';
 import { t } from '../utils/i18n';
-import { MAX_NUSUK_BYTES, formatFileSize } from '../utils/exportBridge';
+import { Brand, getBrand } from '../utils/brand';
+import { formatFileSize, getMaxExportBytes, formatMaxMb } from '../utils/exportBridge';
 import { IconDownload } from './Icons';
 
 export interface ActionBarProps {
   cropWidth: number;
   cropHeight: number;
   bytes: number;
+  maxBytes?: number;
+  brand?: Brand;
   onDownload: () => void;
   disabled: boolean;
   sheetConfig?: SheetConfig;
@@ -19,13 +22,16 @@ export function ActionBar({
   cropWidth,
   cropHeight,
   bytes,
+  maxBytes,
+  brand = getBrand(),
   onDownload,
   disabled,
   sheetConfig,
   totalPhotos
 }: ActionBarProps) {
+  const effectiveMax = maxBytes ?? getMaxExportBytes(brand);
   const kb = formatFileSize(bytes);
-  const ratio = bytes / MAX_NUSUK_BYTES;
+  const ratio = bytes / effectiveMax;
 
   let gaugeColor = 'var(--gauge-green)';
   if (ratio > 1) {
@@ -50,7 +56,13 @@ export function ActionBar({
             : `${cropWidth} × ${cropHeight} px`}
         </span>
         <div class="weight-gauge-container">
-          <div class="weight-gauge-track" role="progressbar" aria-valuenow={bytes} aria-valuemin={0} aria-valuemax={MAX_NUSUK_BYTES}>
+          <div
+            class="weight-gauge-track"
+            role="progressbar"
+            aria-valuenow={bytes}
+            aria-valuemin={0}
+            aria-valuemax={effectiveMax}
+          >
             <div
               class="weight-gauge-fill"
               style={{
@@ -60,7 +72,7 @@ export function ActionBar({
             />
           </div>
           <span class="weight-label" style={{ color: gaugeColor }}>
-            {t('weight.gauge', { size: kb })}
+            {t('weight.gauge', { size: kb, max: formatMaxMb(effectiveMax) })}
           </span>
         </div>
       </div>

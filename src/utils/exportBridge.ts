@@ -2,7 +2,47 @@ import { EncodedResult, ExportConfig, TransformState, SheetConfig } from '../typ
 import { Brand, getBrand } from './brand';
 import WorkerConstructor from '../workers/export.worker.ts?worker';
 
-export const MAX_NUSUK_BYTES = 1_000_000;
+// ============================================================================
+// CONFIGURATION DES LIMITES D'EXPORTATION (POIDS EN OCTETS)
+// ============================================================================
+// Modifiez facilement ces variables selon vos besoins ou via les variables d'environnement VITE_ :
+// - MAX_NUSUK_BYTES : Le portail officiel Nusuk exige strictement des fichiers <= 1 Mo (1 000 000 octets).
+// - MAX_PORTRAIT_BYTES : Limite générique pour photos d'identité et documents (10 Mo par défaut).
+export let MAX_NUSUK_BYTES: number =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_MAX_NUSUK_BYTES
+    ? Number(import.meta.env.VITE_MAX_NUSUK_BYTES)
+    : 1_000_000;
+
+export let MAX_PORTRAIT_BYTES: number =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_MAX_PORTRAIT_BYTES
+    ? Number(import.meta.env.VITE_MAX_PORTRAIT_BYTES)
+    : 10_000_000;
+
+/**
+ * Retourne la limite de poids maximale en octets selon la marque (nusuk vs portrait).
+ */
+export function getMaxExportBytes(brand: Brand = getBrand()): number {
+  return brand === 'nusuk' ? MAX_NUSUK_BYTES : MAX_PORTRAIT_BYTES;
+}
+
+/**
+ * Modifie dynamiquement la limite de poids d'exportation pour une marque.
+ */
+export function setMaxExportBytes(brand: Brand, bytes: number): void {
+  if (brand === 'nusuk') {
+    MAX_NUSUK_BYTES = bytes;
+  } else {
+    MAX_PORTRAIT_BYTES = bytes;
+  }
+}
+
+/**
+ * Formate la limite maximale en Mo pour l'affichage (ex: "1", "10", "2.5").
+ */
+export function formatMaxMb(bytes: number): string {
+  const mb = bytes / 1_000_000;
+  return Number.isInteger(mb) ? mb.toString() : mb.toFixed(1);
+}
 
 export function formatFileSize(bytes: number): string {
   return (bytes / 1000).toFixed(0);

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   MAX_NUSUK_BYTES,
+  MAX_PORTRAIT_BYTES,
+  getMaxExportBytes,
+  setMaxExportBytes,
+  formatMaxMb,
   formatFileSize,
   getExportWorker,
   terminateExportWorker,
@@ -77,8 +81,26 @@ describe('Export Pipeline & Web Worker', () => {
   });
 
   describe('Export constants and formatting', () => {
-    it('strictly enforces 1,000,000 bytes maximum', () => {
+    it('strictly enforces 1,000,000 bytes maximum for Nusuk and 10,000,000 for Portrait', () => {
       expect(MAX_NUSUK_BYTES).toBe(1_000_000);
+      expect(MAX_PORTRAIT_BYTES).toBe(10_000_000);
+      expect(getMaxExportBytes('nusuk')).toBe(1_000_000);
+      expect(getMaxExportBytes('portrait')).toBe(10_000_000);
+    });
+
+    it('allows modifying export limit via setMaxExportBytes or variable mutation', () => {
+      const origNusuk = MAX_NUSUK_BYTES;
+      setMaxExportBytes('nusuk', 2_000_000);
+      expect(getMaxExportBytes('nusuk')).toBe(2_000_000);
+      expect(MAX_NUSUK_BYTES).toBe(2_000_000);
+      setMaxExportBytes('nusuk', origNusuk);
+      expect(MAX_NUSUK_BYTES).toBe(1_000_000);
+    });
+
+    it('formats max MB correctly', () => {
+      expect(formatMaxMb(1_000_000)).toBe('1');
+      expect(formatMaxMb(10_000_000)).toBe('10');
+      expect(formatMaxMb(2_500_000)).toBe('2.5');
     });
 
     it('formats KB sizes cleanly', () => {
